@@ -1,0 +1,267 @@
+// dwh.OMS_ORDER_HEADER
+Enum PICK_TYPE {
+  "PP" [note: "Vừa pick vừa đóng gói"]
+  "PO" [note: "Chỉ pick"]
+}
+
+Enum ORDER_VERSION {
+  "V2" [note: "Đơn Seamless"]
+}
+
+Table dwh.OMS_ORDER_HEADER as OH  [headercolor: #890058]{
+  ORDERID NUMBER [pk, note: 'Mã đơn hàng']
+  ORDERNO VARCHAR2(100CHAR) [note: 'Mã đơn hàng merchant']
+  STOREID VARCHAR2(50CHAR) [note: 'Mã cửa hàng']
+  P_STOREID VARCHAR2(100CHAR) [note: 'Mã cửa hàng merchant']
+  ORDERSTATUS VARCHAR2(255CHAR) [note: 'Mã trạng thái đơn hàng']
+  DLV_STATUS VARCHAR2(255CHAR) [note: 'Mã trạng thái giao hàng']
+  REASON VARCHAR2(255CHAR) [note: 'Mã lý do hủy']
+  TAX_IDEN_NUM VARCHAR2(50CHAR) [note: 'Mã số thuế']
+  DELIVERY_PARTNER VARCHAR2(255CHAR) [note: 'Đối tác giao hàng']
+  DELIVERY_EMPL NVARCHAR2 [note: 'Nhân viên giao hàng']
+  INTERNAL_AMTPROMO NUMBER [note: 'Khuyến mãi nội bộ']
+  TICKETAMOUNT NUMBER [note: 'Tổng giá trị POS Ticket']
+  ACTUAL_CASHIER VARCHAR2(10CHAR) [note: 'Thu ngân thực tế']
+  CASENO VARCHAR2(50BYTE) [note: 'Mã ticket saleforce']
+  SHIPPINGTYPE VARCHAR2(10BYTE) [note: 'Loại hình giao hàng']
+  VOUCHERCODE VARCHAR2(50BYTE) [note: 'Mã Phiếu mua hàng']
+  NOTE NVARCHAR2 [note: 'Ghi chú']
+  CHANNEL VARCHAR2(255CHAR) [note: 'Mã kênh online']
+  AMTTOTAL NUMBER [note: 'Tổng giá trị đơn']
+  TAXVALUE NUMBER [note: 'Thuế']
+  AMTPROMO NUMBER [note: 'Giá trị khuyến mãi từ đối tác']
+  PAYMENT_METHOD_ID VARCHAR2(255CHAR) [note: 'Phương thức thanh toán']
+  CREATEDBY NVARCHAR2 [note: 'Người tạo']
+  CREATEDDATE DATE [note: 'Thời gian tạo']
+  MODIFIEDBY NVARCHAR2 [note: 'Người chỉnh sửa']
+  MODIFIEDDATE DATE [note: 'Thời gian chỉnh sửa']
+  DELIVERY_DATE DATE [note: 'Ngày giao hàng']
+  SHIPPING_FEE NUMBER [note: 'Phí giao hàng']
+  ORDER_DATE DATE [note: 'Ngày đặt hàng']
+  CASHIERNO NVARCHAR2 [note: 'Mã thu ngân']
+  TICKETNO VARCHAR2(20CHAR) [note: 'Mã ticket']
+  REASON_CODE VARCHAR2(255CHAR) [note: 'Mã giao hàng thất bại']
+  REASON_DES VARCHAR2(255CHAR) [note: 'Lý do giao hàng thất bại']
+  SLOTID NUMBER [note: 'Giờ giao hàng dự kiến']
+  PICKTYPE PICK_TYPE [note: 'Loại pick']
+  SUGGESTBASKET NUMBER [note: '']
+  VER ORDER_VERSION [note: 'Version của đơn']
+
+
+  note: ''' 
+  Table chứa thông tin tổng quan về đơn hàng. Những thông tin từ khác hệ thống khác sẽ được thay đổi/cập nhật tại table này.
+
+  **⚠️ ORDERNO chỉ có trong table này.**
+
+  **📝 Lưu ý khi sử dụng table**
+
+  **KHÔNG NÊN**
+
+  • Sử dụng cột AMTPROMO để lấy GMV nhất là đối với các đơn có VOUCHERCODE
+
+
+  **NÊN**
+
+  • Sử dụng CREATEDDATE thay cho ORDERDATE khi cần double check với hệ thống khác. Thông thường CREATEDDATE sẽ xấp xỉ ORDERDATE, khác biệt sẽ xảy ra khi hệ thống gặp lỗi đồng bộ.
+
+  '''
+}
+// dwh.OMS_ORDER_CUSTOMER
+Table dwh.OMS_ORDER_CUSTOMER as OC  [headercolor: #890058]{
+  ORDERID NUMBER [note: 'Mã đơn hàng']
+  PHONE VARCHAR2(50CHAR) [pk, note: 'Số điện thoại']
+  CARDNO VARCHAR2(50CHAR) [note: 'Mã thẻ Bigxu']
+  NAME NVARCHAR2 [note: 'Họ và tên khách hàng']
+  CUSTOMERID NVARCHAR2 [note: 'Địa chỉ']
+  ADDRS NVARCHAR2 [note: 'Tỉnh']
+  PROVINCE NVARCHAR2 [note: 'Quận']
+  DISTRICT NVARCHAR2 [note: 'Phường']
+  WARD NVARCHAR2 [note: 'Người chỉnh sửa']
+  MODIFIEDBY NVARCHAR2 [note: 'Thời gian chỉnh sửa']
+  MODIFIEDDATE DATE [note: 'NULL']
+  note: ''' 
+  Table chứa thông tin khách hàng và mã thẻ BigXu.
+
+  **⚠️ Table này độc lập với header, luôn luôn join với header khi muốn sử dụng để đảm bảo tính chính xác.**
+
+  **📝 Lưu ý khi sử dụng table**
+
+  **KHÔNG NÊN**
+
+  • Sử dụng PHONE để mapping, hãy Convert 84 → 0 trước khi sử dụng.
+
+
+  **NÊN**
+
+  • LOWER/UPPER và dùng Funtion FN_CONVERT_TO_VN để đưa địa chỉ về tiếng Việt không dấu nhằm hạn chế các vấn đề liên quan tới export UTF-8.
+
+  '''
+}
+// dwh.OMS_ORDER_DETAILS
+Enum TYPE_PROMO {
+  "0" [note: "Normal"]
+  "1" [note: "Flash Sales"]
+  "2" [note: "Brand Voucher"]
+  "3" [note: "PMH"]
+  "4" [note: "Free Gift"]
+  "5" [note: "PWP"]
+  "6" [note: "Member Price"]
+}
+
+Table dwh.OMS_ORDER_DETAILS as OD  [headercolor: #890058]{
+  DETAIL_NOTE NVARCHAR2 [note: 'Chi tiết ghi chú']
+  FAMCODE VARCHAR2(20CHAR) [note: 'Mã Family']
+  FAMNAME NVARCHAR2 [note: 'Tên Family']
+  DEPTNAME NVARCHAR2 [note: 'Tên Department']
+  PROMO_DES NVARCHAR2 [note: 'Chi tiết khuyến mãi']
+  ITEMSTATUS VARCHAR2(2BYTE) [note: 'Trạng thái sản phẩm Frozen']
+  ISPROMOTION VARCHAR2(2BYTE) [note: 'Có khuyến mãi hay không']
+  APPLYITEMID NVARCHAR2 [note: 'Mã sản phẩm mẹ của Gift']
+  PROMOTIONGIFTCODE VARCHAR2(5BYTE) [note: 'Mã Free Gift']
+  ORDERID NUMBER [pk, note: 'Mã đơn hàng']
+  LINE NUMBER [note: 'Thứ tự sản phẩm trong đơn']
+  BARCODE NVARCHAR2 [note: 'Barcode sảm phẩm']
+  NAME NVARCHAR2 [note: 'Tên sản phẩm']
+  QTY NUMBER [note: 'Số lượng']
+  PRICE NUMBER [note: 'Đơn giá']
+  TAXCODE NUMBER [note: 'Mã thuế']
+  TAXVALUE NUMBER [note: 'Giá trị thuế']
+  AMTTOTAL NUMBER [note: 'Tổng giá trị']
+  AMTPROMO NUMBER [note: 'Tổng khuyến mãi']
+  DESPROMO NVARCHAR2 [note: 'Chi tiết khuyến mãi (bỏ)']
+  STATUS NVARCHAR2 [note: 'Trạng thái đơn hàng của sản phẩm']
+  CINV NUMBER [note: 'Mã Cinv']
+  GOLDCODE VARCHAR2(50CHAR) [note: 'Mã GOLD']
+  SV NUMBER [note: 'Mã Sale Variant']
+  SALEUNIT VARCHAR2(50CHAR) [note: 'Đơn vị tính']
+  SU NUMBER [note: 'Mã Sale Unit']
+  MODIFIEDBY NVARCHAR2 [note: 'Người chỉnh sửa']
+  MODIFIEDDATE DATE [note: 'Thời gian chỉnh sửa']
+  PRICEBFDISCOUNT NUMBER [note: 'Giá sản phẩm trước discount']
+  PRICEAFDISCOUNT NUMBER [note: 'Giá sản phẩm sau discount']
+  PICKEDQTY NUMBER [note: 'Số lượng pick']
+  TYPE TYPE_PROMO [note: 'Loại hình khuyến mãi']
+  TYPEVALUE NUMBER [note: 'Giá trị khuyến mãi']
+  AMTTOTALBFDISCOUNT NUMBER [note: 'Tổng giá trị trước discount']
+
+  note: ''' 
+  Table chứa thông tin chi tiết sản phẩm của đơn hàng. Thông tin chi tiết về các loại hình khuyến mãi sẽ được lưu trữ tại table này.
+
+  **⚠️ Table này độc lập với header, luôn luôn join với header khi muốn sử dụng để đảm bảo tính chính xác.**
+
+  **📝 Lưu ý khi sử dụng table**
+
+  **KHÔNG NÊN**
+
+  • Dùng Barcode để mapping, hãy dùng Goldcode + SV hoặc CINV
+
+
+  **NÊN**
+
+  • Sử dụng NAME để lấy tên sản phẩm tiếng Việt có dấu
+
+  '''
+}
+// dwh.OMS_ORDER_PAYMENT
+Enum PAYMENT_STATUS {
+  "1" [note: "Default"]
+  "9" [note: "Adjusted"]
+}
+
+Enum PAYMENT_TYPE {
+  "CR" [note: "Credit"]
+  "RF" [note: "Refund"]
+}
+
+Table dwh.OMS_ORDER_PAYMENT as OP  [headercolor: #890058]{
+  ORDERID NUMBER [pk] 
+  PAYMENT_METHOD_ID VARCHAR2(255CHAR)
+  PAYMENT_AMOUNT NUMBER
+  PAYMENT_TRANS_ID VARCHAR2(100CHAR)
+  CREATEDBY VARCHAR2(255CHAR)
+  CREATEDDATE DATE
+  MODIFIEDBY VARCHAR2(255CHAR)
+  MODIFIEDDATE DATE
+  STATUS PAYMENT_STATUS [note: 'Trạng thái thanh toán']
+  PAYMENT_TYPE PAYMENT_TYPE [note: 'Loại hình thanh toán']
+  note: ''' 
+  Table chứa thông tin về giao dịch và phương thức thanh toán.
+
+  **⚠️ Table này độc lập với header, luôn luôn join với header khi muốn sử dụng để đảm bảo tính chính xác.**
+
+  **⚠️ Một đơn hàng có thể có nhiều hơn một phương thức thanh toán.**
+
+  **📝 Lưu ý khi sử dụng table**
+
+  **KHÔNG NÊN**
+
+  • Dùng làm bảng gốc vì ORDERID bị xóa ở header sẽ không bị xóa ở payment.
+
+
+  **NÊN**
+
+  • Xử lý cơ bản để có được unique ORDERID. Đơn hàng có nhiều hơn 1 phương thức thanh toán là đơn hàng sử dụng E-Voucher.
+
+  '''
+}
+// dwh.OMS_ORDER_DETAILS_DISCOUNT
+Enum DISCOUNT_VALUE_TYPE {
+  "%" [note: "Giảm x phần trăm trên giá bán"]
+  "$" [note: "Giảm x đồng trên giá bán"]
+  "F" [note: "Fixed, Giảm giá cố định"]
+}
+Table dwh.OMS_ORDER_DETAILS_DISCOUNT [headercolor: #890058]{
+ ORDERID NUMBER [pk]
+ LINE NUMBER [note: 'Thứ tự xuất hiện của item trong đơn hàng']
+ BARCODE CHAR
+ DISCOUNTQTY NUMBER
+ DISCOUNTVALUE NUMBER
+ TOTALDISCOUNT NUMBER
+ DISCOUNTVALUETYPE DISCOUNT_VALUE_TYPE
+ MODIFIEDBY VARCHAR2(20CHAR)
+ MODIFIEDDATE DATE
+ note: ''' 
+ Bảng chứa toàn bộ khuyến mãi về mặt item
+'''
+}
+// dwh.OMS_ORDER_TRACKING
+Table dwh.OMS_ORDER_TRACKING as OT  [headercolor: #890058]{
+  CREATEDBY NVARCHAR2   [note: 'Người tạo']
+  CREATEDDATE DATE  [note: 'Thời gian tạo']
+  ORDERID NUMBER [pk, note: 'Mã đơn hàng']
+  LINE NUMBER [note: 'Thứ tự trong đơn hàng']
+  ORDERSTATUS VARCHAR2(255CHAR)  [note: 'Trạng thái đơn hàng']
+  NOTE NVARCHAR2  [note: 'Ghi chú'] 
+
+  note: ''' 
+  Table chứa thông tin về lịch sử thay đổi trạng thái đơn hàng.
+
+  **⚠️ Table này độc lập với header, luôn luôn join với header khi muốn sử dụng để đảm bảo tính chính xác.**
+
+  **⚠️ Mỗi ORDERSTATUS có thể được ghi nhận nhiều hơn 1 lần.**
+
+  **📝 Lưu ý khi sử dụng table**
+
+  **KHÔNG NÊN**
+
+  • Sử dụng table khi chưa distinct ORDERID và ORDERSTATUS.
+
+
+  **NÊN**
+
+  • Sử dụng LINE để biết thứ tự các STATUS diễn ra bên cạnh CREATEDDATE.
+
+  '''
+}
+
+Ref: "dwh"."OMS_ORDER_HEADER"."ORDERID" < "dwh"."OMS_ORDER_TRACKING"."ORDERID"
+
+Ref: "dwh"."OMS_ORDER_HEADER"."ORDERID" < "dwh"."OMS_ORDER_CUSTOMER"."ORDERID"
+
+Ref: "dwh"."OMS_ORDER_HEADER"."ORDERID" < "dwh"."OMS_ORDER_PAYMENT"."ORDERID"
+
+Ref: "dwh"."OMS_ORDER_HEADER"."ORDERID" < "dwh"."OMS_ORDER_DETAILS"."ORDERID"
+
+Ref: "dwh"."OMS_ORDER_DETAILS"."ORDERID" < "dwh"."OMS_ORDER_DETAILS_DISCOUNT"."ORDERID"
+
+Ref: "dwh"."OMS_ORDER_DETAILS"."LINE" < "dwh"."OMS_ORDER_DETAILS_DISCOUNT"."LINE"

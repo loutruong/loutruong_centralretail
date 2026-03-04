@@ -1,0 +1,51 @@
+{
+    "store_id": 108,
+    "af_content": [
+        {
+            "quantity": 1,
+            "id": "8934563322830"
+        },
+        {
+            "quantity": 1,
+            "id": "8934563035938"
+        }
+    ],
+    "af_discount": 25000,
+    "af_voucher": [
+        {
+            "voucher_id": 611,
+            "voucher_channel": "Online",
+            "voucher_value": "25000"
+        },
+        {
+            "voucher_id": 611,
+            "voucher_channel": "Online",
+            "voucher_value": "25000"
+        },
+        {
+            "voucher_id": 611,
+            "voucher_channel": "Online",
+            "voucher_value": "25000"
+        }
+    ],
+    "af_price": 501000,
+    "af_order_id": "6231245",
+    "af_shipping_fee": 0,
+    "af_receipt_id": "6231245",
+    "af_content_id": [
+        "8934563322830",
+        "8934563035938"
+    ],
+    "af_new_member": 1,
+    "af_is_first_purchase": false,
+    "af_content_type": "product",
+    "af_payment_type": "PaymentType.cod",
+    "af_currency": "VND",
+    "af_shipping_type": 2,
+    "af_revenue": 501000,
+    "af_quantity": [
+        1,
+        1
+    ],
+    "af_point": 0
+}

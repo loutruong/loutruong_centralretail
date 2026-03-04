@@ -1,0 +1,77 @@
+{
+    "store_id": 126,
+    "af_content": [
+        {
+            "quantity": 1,
+            "id": "8850393919968"
+        },
+        {
+            "quantity": 1,
+            "id": "8850393802109"
+        },
+        {
+            "quantity": 1,
+            "id": "8934868185260"
+        },
+        {
+            "quantity": 1,
+            "id": "8934868170020"
+        },
+        {
+            "quantity": 1,
+            "id": "8936017361914"
+        },
+        {
+            "quantity": 3,
+            "id": "8934561020035"
+        },
+        {
+            "quantity": 1,
+            "id": "8936042871303"
+        },
+        {
+            "quantity": 1,
+            "id": "8934760210305"
+        },
+        {
+            "quantity": 1,
+            "id": "8935049501509"
+        }
+    ],
+    "af_discount": 0,
+    "af_voucher": [],
+    "af_price": 0,
+    "af_order_id": "5658769",
+    "af_shipping_fee": 0,
+    "af_receipt_id": "5658769",
+    "af_content_id": [
+        "8850393919968",
+        "8850393802109",
+        "8934868185260",
+        "8934868170020",
+        "8936017361914",
+        "8934561020035",
+        "8936042871303",
+        "8934760210305",
+        "8935049501509"
+    ],
+    "af_new_member": 1,
+    "af_is_first_purchase": null,
+    "af_content_type": "product",
+    "af_payment_type": "PaymentType.cod",
+    "af_currency": "VND",
+    "af_shipping_type": 1,
+    "af_revenue": 0,
+    "af_quantity": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        3,
+        1,
+        1,
+        1
+    ],
+    "af_point": 443700
+}

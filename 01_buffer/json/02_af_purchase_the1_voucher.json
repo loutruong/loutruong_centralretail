@@ -1,0 +1,47 @@
+{
+    "af_content_type": "product",
+    "af_new_member": 1,
+    "af_payment_type": "PaymentType.momo",
+    "af_revenue": 39200,
+    "af_content": [
+        {
+            "id": "8934588063053",
+            "quantity": 1
+        },
+        {
+            "id": "2655736",
+            "quantity": 2
+        },
+        {
+            "id": "8934803043884",
+            "quantity": 2
+        },
+        {
+            "id": "8935018801689",
+            "quantity": 1
+        }
+    ],
+    "af_price": 39200,
+    "af_receipt_id": "6555228",
+    "af_point": 0,
+    "af_order_id": "6555228",
+    "af_shipping_type": 1,
+    "af_currency": "VND",
+    "af_discount": 0,
+    "af_content_id": [
+        "8934588063053",
+        "2655736",
+        "8934803043884",
+        "8935018801689"
+    ],
+    "af_shipping_fee": 5000,
+    "af_quantity": [
+        1,
+        2,
+        2,
+        1
+    ],
+    "af_is_first_purchase": false,
+    "af_voucher": [],
+    "store_id": 126
+}

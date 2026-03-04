@@ -1,0 +1,20 @@
+{
+    "status": "FOUND",
+    "error": null,
+    "deepLink": {
+        "campaign_id": "",
+        "af_sub3": "",
+        "match_type": "referrer",
+        "af_sub1": "",
+        "deep_link_value": "143",
+        "campaign": "",
+        "af_sub4": "",
+        "timestamp": "2025-10-15T03:17:03.092",
+        "click_http_referrer": "",
+        "af_sub5": "",
+        "media_source": "",
+        "af_sub2": "",
+        "deep_link_sub1": "register_base_store",
+        "is_deferred": true
+    }
+}
