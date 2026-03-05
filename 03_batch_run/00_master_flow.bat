@@ -16,7 +16,7 @@ REM --- 1. SET THE EXPLICIT PATH TO YOUR PYTHON EXECUTABLE (Keeping this for com
 SET "PYTHON_EXEC=C:\Users\tt20368267\AppData\Local\anaconda3\python.exe"
 
 REM --- 2. DEFINE CODE PATHS ---
-SET "MASTER_DIR=D:\OneDrive - Central Group\Stella's files - 1. HAND OVER\3. REPORT DAILY\01_Code sql\loutruong\02_batch_run"
+SET "MASTER_DIR=D:\OneDrive - Central Group\Stella's files - 1. HAND OVER\3. REPORT DAILY\01_code\loutruong\03_batch_run"
 SET "LOG_FILE_DIR=D:\Automation_Logs"
 
 REM --- 3. SAFE TIMESTAMP GENERATION (avoids regional format errors) ---

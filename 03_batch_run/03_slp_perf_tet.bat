@@ -6,7 +6,7 @@ SET "ANACONDA_BASE_DIR=C:\Users\tt20368267\AppData\Local\anaconda3"
 
 REM --- CORRECTED NOTEBOOK PATH ---
 REM DO NOT use quotes here
-SET NOTEBOOK_PATH=D:\OneDrive - Central Group\Stella's files - 1. HAND OVER\3. REPORT DAILY\01_code\loutruong\02_auto\03_slp_perf_tet.ipynb
+SET NOTEBOOK_PATH=D:\OneDrive - Central Group\Stella's files - 1. HAND OVER\3. REPORT DAILY\01_code\loutruong\03_batch_run\03_slp_perf_tet.ipynb
 
 REM --- Activate the base environment ---
 CALL "%ANACONDA_BASE_DIR%\Scripts\activate.bat"
