@@ -38,8 +38,8 @@ WITH
 		WHERE
 			1 = 1 --
 			-- AND event_time >= CURRENT_DATE - INTERVAL '10 day'
-			AND (event_time BETWEEN '2026-01-01 00:00:00+07' AND '2026-02-15 23:59:59+07')
-			-- AND event_time >= '2026-02-13 00:00:00+07'
+			-- AND (event_time BETWEEN '2026-01-01 00:00:00+07' AND '2026-02-15 23:59:59+07')
+			AND event_time >= '2026-02-13 00:00:00+07'
 			AND LOWER(is_primary_attribution) = 'true'
 			AND event_name IN ('af_purchase_api', 'af_purchase')
 	)
@@ -59,7 +59,7 @@ WITH
 			TO_CHAR(event_time, 'YYYY-MM-DD')                                                    AS ds,
 			-- event_name                                                                     AS event_name,
 			COUNT(DISTINCT COALESCE(customer_user_id, idfv, advertising_id, appsflyer_id))       AS byr_cnt,
-			SUM(CAST(event_revenue_usd AS DOUBLE PRECISION))                                     AS net_sales
+			SUM(CAST(event_revenue AS DOUBLE PRECISION))                                         AS net_sales
 		FROM
 			t_dwd
 		GROUP BY
