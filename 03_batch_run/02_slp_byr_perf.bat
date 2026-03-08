@@ -28,4 +28,5 @@ git push -u loutruong_centralretail main:main
 REM --- Cleanup ---
 CALL conda deactivate
 ENDLOCAL
-PAUSE
+@REM PAUSE
+EXIT /B
