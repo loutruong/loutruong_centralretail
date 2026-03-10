@@ -38,8 +38,8 @@ WITH
 		WHERE
 			1 = 1 --
 			-- AND event_time >= CURRENT_DATE - INTERVAL '10 day'
-			AND (event_time BETWEEN '2026-02-23 00:00:00+07' AND '2026-02-25 23:59:59+07')
-			-- AND event_time >= '2026-02-13 00:00:00+07'
+			-- AND (event_time BETWEEN '2026-02-23 00:00:00+07' AND '2026-02-25 23:59:59+07')
+			AND event_time >= '2026-01-01 00:00:00+07'
 			AND LOWER(is_primary_attribution) = 'true'
 			AND event_name IN ('af_purchase_api', 'af_purchase')
 	)
