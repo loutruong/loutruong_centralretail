@@ -491,3 +491,352 @@ EVALUATE
 		[channel_mapping] ASC,
 		[division] ASC,
 		[site_id] ASC
+
+
+
+
+EVALUATE
+	VAR RawData =
+	SUMMARIZECOLUMNS(
+		DIM_DATE[YM_DATE],
+		SALE_TYPE[SALE_TYPE],
+		DIM_CHANNEL[NAME_IN_USE],
+		DIM_PRODUCT[DIVISION_GROUP],
+		BRAND_SITE[SITEID],
+		BRAND_SITE[BU],
+		-- WHERE: Applied directly to the engine for speed
+		KEEPFILTERS(FILTER(
+			ALL(DIM_DATE[YM_DATE]),
+			DIM_DATE[YM_DATE] >= "2026-01-01" && DIM_DATE[YM_DATE] <= "2026-01-31"
+		)),
+		KEEPFILTERS(FILTER(
+			ALL(SALE_TYPE[SALE_TYPE]),
+			SALE_TYPE[SALE_TYPE] <> "all"
+		)),
+		KEEPFILTERS(FILTER(
+			ALL(BRAND_SITE[BU]),
+			BRAND_SITE[BU] = "hyper"
+		)),
+		KEEPFILTERS(FILTER(
+			ALL(DIM_PRODUCT[DIVISION_GROUP]),
+			DIM_PRODUCT[DIVISION_GROUP] IN {
+				"dry food",
+				"fresh food",
+				"hba and cosmetic",
+				"non-food"
+			}
+		)),
+		KEEPFILTERS(FILTER(
+			ALL(DIM_CHANNEL[ONLINE_CHANNEL]),
+			NOT (DIM_CHANNEL[ONLINE_CHANNEL] IN {
+				"hyper",
+				"tops"
+			})
+		)),
+		KEEPFILTERS(FILTER(
+			ALL(DIM_CHANNEL[NAME_IN_USE]),
+			NOT (DIM_CHANNEL[NAME_IN_USE] IN {
+				"offline"
+			})
+		)),
+		-- MEASURES
+		// "order_oms", COALESCE(
+		// 	METRICS[00_ORDERS_OMS],
+		// 	0
+		// ),
+		// "order_pos", COALESCE(
+		// 	METRICS[00_ORDERS_POS],
+		// 	0
+		// ),
+		// "gmv", COALESCE(
+		// 	METRICS[01_GMV],
+		// 	0
+		// ),
+		// "gross_sale", COALESCE(
+		// 	METRICS[01_GROSS_SALES],
+		// 	0
+		// ),
+		"net_sale", COALESCE(
+			METRICS[01_NET_SALES],
+			0
+		),
+		// "net_sale_hyper", COALESCE(
+		// 	METRICS[01_NET_SALES_HYPER],
+		// 	0
+		// ),
+		"front_margin_number", COALESCE(
+			METRICS[01_MARGIN],
+			0
+		)
+	)
+	RETURN
+		SELECTCOLUMNS(
+			RawData,
+			"ds", [YM_DATE],
+			"sale_type", [SALE_TYPE],
+			// "channel", [NAME_IN_USE],
+			"channel_mapping", SWITCH(
+				[NAME_IN_USE],
+				"app", "App",
+				"tele", "Tele",
+				"grab", "Grab",
+				"zalo", "Zalo",
+				"web", "Web",
+				[NAME_IN_USE]
+			),
+			// "division", [DIVISION_GROUP],
+			"division_mapping", SWITCH(
+				[DIVISION_GROUP],
+				"dry food", "Dry",
+				"fresh food", "Fresh",
+				"hba and cosmetic", "HBA",
+				"non-food", "Non-Food",
+				[DIVISION_GROUP]
+			),
+			"region", SWITCH(
+				VALUE([SITEID]),
+				108, "Ho Chi Minh",
+				102, "Ho Chi Minh",
+				115, "Ho Chi Minh",
+				122, "Ho Chi Minh",
+				123, "Ho Chi Minh",
+				101, "Ho Chi Minh",
+				121, "Ho Chi Minh",
+				111, "Ho Chi Minh",
+				103, "South",
+				133, "South",
+				120, "South",
+				142, "South",
+				140, "South",
+				137, "South",
+				143, "South",
+				152, "South",
+				107, "Central",
+				126, "Central",
+				109, "Central",
+				141, "Central",
+				130, "Central",
+				112, "Central",
+				129, "Central",
+				139, "Central",
+				153, "Central",
+				104, "Ha Noi",
+				113, "Ha Noi",
+				116, "Ha Noi",
+				144, "Ha Noi",
+				124, "Ha Noi",
+				119, "Ha Noi",
+				131, "Ha Noi",
+				146, "Ha Noi",
+				155, "Ha Noi",
+				151, "Ha Noi",
+				106, "North",
+				128, "North",
+				118, "North",
+				114, "North",
+				117, "North",
+				125, "North",
+				145, "North",
+				154, "North",
+				[SITEID]
+			),
+			"site_id", [SITEID],
+			// "site_code", SWITCH(
+			// 	VALUE([SITEID]),
+			// 	108, "gvp",
+			// 	102, "alc",
+			// 	115, "thp",
+			// 	122, "tch",
+			// 	123, "dan",
+			// 	101, "dni",
+			// 	121, "bdg",
+			// 	111, "pth",
+			// 	103, "mdg",
+			// 	133, "ntt",
+			// 	120, "cto",
+			// 	142, "bte",
+			// 	140, "tvh",
+			// 	137, "mto",
+			// 	143, "bra",
+			// 	152, "blu",
+			// 	107, "dng",
+			// 	126, "dlt",
+			// 	109, "hue",
+			// 	141, "bmt",
+			// 	130, "ntg",
+			// 	112, "vih",
+			// 	129, "qnn",
+			// 	139, "qni",
+			// 	153, "ntn",
+			// 	104, "tlg",
+			// 	113, "vpc",
+			// 	116, "lbn",
+			// 	144, "tnn",
+			// 	124, "vti",
+			// 	119, "mlh",
+			// 	131, "bgg",
+			// 	146, "lci",
+			// 	155, "ybi",
+			// 	151, "hnm",
+			// 	106, "hpg",
+			// 	128, "hlg",
+			// 	118, "tha",
+			// 	114, "ndh",
+			// 	117, "hdg",
+			// 	125, "nbh",
+			// 	145, "tbh",
+			// 	154, "hyn",
+			// 	[SITEID]
+			// ),
+			"site_name", SWITCH(
+				VALUE([SITEID]),
+				108, "GO! Gò Vấp",
+				102, "GO! An Lạc",
+				115, "GO! Tân Hiệp",
+				122, "GO! Trường Chinh",
+				123, "GO! Dĩ An",
+				101, "GO! Đồng Nai",
+				121, "GO! Bình Dương",
+				111, "GO! Phú Thạnh",
+				103, "GO! Miền Đông",
+				133, "GO! Nguyễn Thị Thập",
+				120, "GO! Cần Thơ",
+				142, "GO! Bến Tre",
+				140, "GO! Trà Vinh",
+				137, "GO! Mỹ Tho",
+				143, "GO! Bà Rịa",
+				152, "GO! Bạc Liêu",
+				107, "GO! Đà Nẵng",
+				126, "GO! Đà Lạt",
+				109, "GO! Huế",
+				141, "GO! Buôn Ma Thuột",
+				130, "GO! Nha Trang",
+				112, "GO! Vinh",
+				129, "GO! Quy Nhơn",
+				139, "GO! Quảng Ngãi",
+				153, "GO! Ninh Thuận",
+				104, "GO! Thăng Long",
+				113, "GO! Vĩnh Phúc",
+				116, "GO! Long Biên",
+				144, "GO! Thái Nguyên",
+				124, "GO! Việt Trì",
+				119, "Big C Mê Linh",
+				131, "GO! Bắc Giang",
+				146, "GO! Lào Cai",
+				155, "GO! Yên Bái",
+				151, "GO! Hà Nam",
+				106, "GO! Hải Phòng",
+				128, "GO! Hạ Long",
+				118, "GO! Thanh Hóa",
+				114, "GO! Nam Định",
+				117, "GO! Hải Dương",
+				125, "GO! Ninh Bình",
+				145, "GO! Thái Bình",
+				154, "GO! Hưng Yên",
+				[SITEID]
+			),
+			// "order_oms", [order_oms],
+			// "order_pos", [order_pos],
+			// "gmv", [gmv],
+			// "gross_sale", [gross_sale],
+			"net_sale", [net_sale],
+			// "net_sale_hyper", [net_sale_hyper],
+			"front_margin_number", [front_margin_number]
+		)
+	ORDER BY
+		[ds] ASC,
+		[sale_type] DESC,
+		[channel_mapping] ASC,
+		[site_id] ASC
+
+
+
+EVALUATE
+    VAR RawData =
+    SUMMARIZECOLUMNS(
+        DIM_DATE[YM_DATE],
+        SALE_TYPE[SALE_TYPE],
+        DIM_CHANNEL[NAME_IN_USE],
+        DIM_PRODUCT[DIVISION_GROUP],
+        BRAND_SITE[SITEID],
+        BRAND_SITE[BU],
+        KEEPFILTERS(FILTER(
+            ALL(DIM_DATE[YM_DATE]),
+            DIM_DATE[YM_DATE] >= "2026-01-01" && DIM_DATE[YM_DATE] <= "2026-01-31"
+        )),
+        KEEPFILTERS(FILTER(
+            ALL(SALE_TYPE[SALE_TYPE]),
+            SALE_TYPE[SALE_TYPE] <> "all"
+        )),
+        KEEPFILTERS(FILTER(
+            ALL(BRAND_SITE[BU]),
+            BRAND_SITE[BU] = "hyper"
+        )),
+        KEEPFILTERS(FILTER(
+            ALL(DIM_PRODUCT[DIVISION_GROUP]),
+            DIM_PRODUCT[DIVISION_GROUP] IN { "dry food", "fresh food", "hba and cosmetic", "non-food" }
+        )),
+        KEEPFILTERS(FILTER(
+            ALL(DIM_CHANNEL[ONLINE_CHANNEL]),
+            NOT (DIM_CHANNEL[ONLINE_CHANNEL] IN { "hyper", "tops" })
+        )),
+        KEEPFILTERS(FILTER(
+            ALL(DIM_CHANNEL[NAME_IN_USE]),
+            NOT (DIM_CHANNEL[NAME_IN_USE] IN { "offline" })
+        )),
+        "net_sale", COALESCE(METRICS[01_NET_SALES], 0),
+        "front_margin_number", COALESCE(METRICS[01_MARGIN], 0)
+    )
+
+    -- NEW: Filter the summarized table before selecting columns
+    VAR FilteredData = 
+    FILTER(
+        RawData,
+        [net_sale] > 0 || [front_margin_number] > 0
+    )
+
+    RETURN
+        SELECTCOLUMNS(
+            FilteredData, -- Changed from RawData to FilteredData
+            "ds", [YM_DATE],
+            "sale_type", [SALE_TYPE],
+            "channel_mapping", SWITCH(
+                [NAME_IN_USE],
+                "app", "App",
+                "tele", "Tele",
+                "grab", "Grab",
+                "zalo", "Zalo",
+                "web", "Web",
+                [NAME_IN_USE]
+            ),
+            "division_mapping", SWITCH(
+                [DIVISION_GROUP],
+                "dry food", "Dry",
+                "fresh food", "Fresh",
+                "hba and cosmetic", "HBA",
+                "non-food", "Non-Food",
+                [DIVISION_GROUP]
+            ),
+            "region", SWITCH(
+                VALUE([SITEID]),
+                108, "Ho Chi Minh", 102, "Ho Chi Minh", 115, "Ho Chi Minh", 122, "Ho Chi Minh", 123, "Ho Chi Minh", 101, "Ho Chi Minh", 121, "Ho Chi Minh", 111, "Ho Chi Minh",
+                103, "South", 133, "South", 120, "South", 142, "South", 140, "South", 137, "South", 143, "South", 152, "South",
+                107, "Central", 126, "Central", 109, "Central", 141, "Central", 130, "Central", 112, "Central", 129, "Central", 139, "Central", 153, "Central",
+                104, "Ha Noi", 113, "Ha Noi", 116, "Ha Noi", 144, "Ha Noi", 124, "Ha Noi", 119, "Ha Noi", 131, "Ha Noi", 146, "Ha Noi", 155, "Ha Noi", 151, "Ha Noi",
+                106, "North", 128, "North", 118, "North", 114, "North", 117, "North", 125, "North", 145, "North", 154, "North",
+                [SITEID]
+            ),
+            "site_id", [SITEID],
+            "site_name", SWITCH(
+                VALUE([SITEID]),
+                108, "GO! Gò Vấp", 102, "GO! An Lạc", 115, "GO! Tân Hiệp", 122, "GO! Trường Chinh", 123, "GO! Dĩ An", 101, "GO! Đồng Nai", 121, "GO! Bình Dương", 111, "GO! Phú Thạnh", 103, "GO! Miền Đông", 133, "GO! Nguyễn Thị Thập", 120, "GO! Cần Thơ", 142, "GO! Bến Tre", 140, "GO! Trà Vinh", 137, "GO! Mỹ Tho", 143, "GO! Bà Rịa", 152, "GO! Bạc Liêu", 107, "GO! Đà Nẵng", 126, "GO! Đà Lạt", 109, "GO! Huế", 141, "GO! Buôn Ma Thuột", 130, "GO! Nha Trang", 112, "GO! Vinh", 129, "GO! Quy Nhơn", 139, "GO! Quảng Ngãi", 153, "GO! Ninh Thuận", 104, "GO! Thăng Long", 113, "GO! Vĩnh Phúc", 116, "GO! Long Biên", 144, "GO! Thái Nguyên", 124, "GO! Việt Trì", 119, "Big C Mê Linh", 131, "GO! Bắc Giang", 146, "GO! Lào Cai", 155, "GO! Yên Bái", 151, "GO! Hà Nam", 106, "GO! Hải Phòng", 128, "GO! Hạ Long", 118, "GO! Thanh Hóa", 114, "GO! Nam Định", 117, "GO! Hải Dương", 125, "GO! Ninh Bình", 145, "GO! Thái Bình", 154, "GO! Hưng Yên",
+                [SITEID]
+            ),
+            "net_sale", [net_sale],
+            "front_margin_number", [front_margin_number]
+        )
+    ORDER BY
+        [ds] ASC,
+        [sale_type] DESC,
+        [channel_mapping] ASC,
+        [site_id] ASC
