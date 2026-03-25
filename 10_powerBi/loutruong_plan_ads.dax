@@ -1,0 +1,51 @@
+EVALUATE
+    VAR RawData =
+    SUMMARIZECOLUMNS(
+        DIM_DATE[YM_DATE],
+        DIM_CHANNEL[NAME_IN_USE],
+        SALE_TYPE[SALE_TYPE],
+        DIM_PRODUCT[DIVISION_GROUP],
+        KEEPFILTERS(FILTER(
+            ALL(DIM_DATE[YM_DATE]),
+            DIM_DATE[YM_DATE] >= "2026-01-01" && DIM_DATE[YM_DATE] <= "2026-03-31"
+        )),
+        KEEPFILTERS(FILTER(
+            ALL(SALE_TYPE[SALE_TYPE]),
+            SALE_TYPE[SALE_TYPE] <> "all"
+        )),
+        KEEPFILTERS(FILTER(
+            ALL(BRAND_SITE[BU]),
+            BRAND_SITE[BU] = "hyper"
+        )),
+        KEEPFILTERS(FILTER(
+            ALL(DIM_PRODUCT[DIVISION_GROUP]),
+            DIM_PRODUCT[DIVISION_GROUP] IN { "dry food", "fresh food", "hba and cosmetic", "non-food" }
+        )),
+        KEEPFILTERS(FILTER(
+            ALL(DIM_CHANNEL[ONLINE_CHANNEL]),
+            NOT (DIM_CHANNEL[ONLINE_CHANNEL] IN { "hyper", "tops" })
+        )),
+        KEEPFILTERS(FILTER(
+            ALL(DIM_CHANNEL[NAME_IN_USE]),
+            NOT (DIM_CHANNEL[NAME_IN_USE] IN { "offline" })
+        )),
+        "net_sale", COALESCE(METRICS[01_NET_SALES], 0),
+        "front_margin_number", COALESCE(METRICS[01_MARGIN], 0)
+    )
+    VAR FilteredData = 
+    FILTER(
+        RawData,
+        [net_sale] > 0 || [front_margin_number] > 0
+    )
+    RETURN
+        SELECTCOLUMNS(
+            FilteredData,
+            "ds", [YM_DATE],
+            [NAME_IN_USE],[SALE_TYPE],
+            [DIVISION_GROUP],
+           [net_sale]
+            ,[front_margin_number]
+        )
+    ORDER BY
+        [ds] ASC,
+        [sale_type] DESC,
