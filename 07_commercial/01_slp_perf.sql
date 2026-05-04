@@ -29,20 +29,22 @@ WHERE
 ;
 
 SELECT
-	TO_CHAR(sale_date, 'YYYY') AS ys,
-	SUM(ord_cnt)               AS ord_cnt,
-	SUM(net_sales)             AS net_sales
+	TO_CHAR(SALE_DATE, 'YYYY-MM-DD') AS ds,
+	SUM(ord_cnt)                     AS ord_cnt,
+	SUM(net_sales)                   AS net_sales
 FROM
 	crv_data.LOUTRUONG_SUPPLIER_PERF_DI
 WHERE
 	1 = 1
 	AND (
-		SALE_DATE BETWEEN '01-JAN-2024' AND '31-DEC-2024'
+		SALE_DATE BETWEEN '01-APR-2026' AND '30-APR-2026'
 		-- OR SALE_DATE BETWEEN '01-JAN-2026' AND '31-MAR-2026'
 	)
 	AND LOWER(SUPPLIER_CODE) IN ('00_all_omni')
 	AND LOWER(DIMENSION_GROUP) IN ('channel')
-	AND LOWER(DIMENSION) IN ('app')
+	-- AND LOWER(DIMENSION) IN ('app')
 GROUP BY
-	TO_CHAR(sale_date, 'YYYY')
+	TO_CHAR(SALE_DATE, 'YYYY-MM-DD')
+ORDER BY
+	TO_CHAR(SALE_DATE, 'YYYY-MM-DD') DESC
 ;
