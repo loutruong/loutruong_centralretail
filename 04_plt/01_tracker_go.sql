@@ -56,9 +56,9 @@ WITH
 		SELECT
 			TO_CHAR(event_time, 'YYYY-MM-DD')                                                                     AS ds,
 			-- event_name                                                                     AS       event_name,
-			COUNT(DISTINCT COALESCE(customer_user_id, idfv, advertising_id, appsflyer_id))                        AS byr_cnt
-			-- ,
-			-- SUM(CAST(event_revenue_usd AS DOUBLE PRECISION))                                     AS net_sales
+			COUNT(DISTINCT COALESCE(customer_user_id, idfv, advertising_id, appsflyer_id))                        AS byr_cnt,
+			-- 
+			SUM(CAST(event_revenue_usd AS DOUBLE PRECISION)) AS net_sales
 		FROM
 			t_dwd
 		GROUP BY
