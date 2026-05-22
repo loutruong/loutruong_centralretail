@@ -1,4 +1,10 @@
 -- Active: 1757065616767@@10.250.139.30@5432@bigc_tracking_db
+-- @@ Input: bigc_tracking_db.bigc_tracking.in_app_event_non_organic_androids
+-- @@ Input: bigc_tracking_db.bigc_tracking.in_app_event_non_organic_ios
+-- @@ Input: bigc_tracking_db.bigc_tracking.in_app_event_organic_androids
+-- @@ Input: bigc_tracking_db.bigc_tracking.in_app_event_organic_ios
+
+-- @@ Input: bigc_tracking_db.bigc_tracking.in_app_event_organic_ios
 SELECT
 	*
 FROM
