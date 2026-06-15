@@ -60,9 +60,29 @@ WHERE
 	-- 	-- OR SALE_DATE BETWEEN '01-JAN-2026' AND '25-MAY-2026'
 	-- 	-- OR SALE_DATE BETWEEN '01-JAN-2026' AND '31-MAR-2026'
 	-- )
-	AND LOWER(SUPPLIER_CODE) IN ('00_all_hyper')
+	AND LOWER(SUPPLIER_CODE) IN ('00_all_omni')
 	AND LOWER(DIMENSION_GROUP) IN ('channel')
-	-- AND LOWER(DIMENSION) IN ('omni', 'app')
+	-- AND LOWER(DIMENSION) IN ('app')
+	AND LOWER(DIMENSION) IN ('omni', 'app')
 ORDER BY
 	sale_date ASC
+;
+
+SELECT
+	*
+FROM
+	crv_data.loutruong_supplier_byr_perf_di
+WHERE
+	1 = 1
+	-- AND (sale_date BETWEEN ADD_MONTHS (TRUNC(SYSDATE - 1, 'YYYY'), -12) AND TRUNC(SYSDATE - 1))
+	-- AND supplier_code IN (
+	-- 	SELECT
+	-- 		supplier_code
+	-- 	FROM
+	-- 		omni_digimgr.loutruong_dim_supplier
+	-- )
+	AND sale_date = '11-JUN-2026'
+ORDER BY
+	sale_date ASC,
+	supplier_code ASC
 ;
