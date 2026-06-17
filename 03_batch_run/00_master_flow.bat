@@ -98,21 +98,21 @@ ECHO *************************************************************************
 @REM ECHO * Flow 3 Complete at %TIME%
 @REM ECHO *************************************************************************
 
-REM --- FLOW 3: 05_game28thbirthday.bat ---
-TITLE AUTOMATION: Running Flow 3 of 3 (GAME28THBIRTHDAY)
-ECHO.
-ECHO *************************************************************************
-ECHO * Starting Flow 3: 05_GAME28THBIRTHDAY (May take a moment)
-ECHO *************************************************************************
-ECHO. >> "%LOG_FILE_NAME%"
-ECHO Starting Flow 3: 05_GAME28THBIRTHDAY >> "%LOG_FILE_NAME%"
-ECHO Flow 3 Start Time: %DATE% %TIME% >> "%LOG_FILE_NAME%"
-CALL "%MASTER_DIR%\05_game28thbirthday.bat" >> "%LOG_FILE_NAME%" 2>&1
-ECHO Flow 3 End Time: %DATE% %TIME% >> "%LOG_FILE_NAME%"
-ECHO ------------------------------------------------------------------------- >> "%LOG_FILE_NAME%"
-ECHO *************************************************************************
-ECHO * Flow 3 Complete at %TIME%
-ECHO *************************************************************************
+@REM REM --- FLOW 3: 05_game28thbirthday.bat ---
+@REM TITLE AUTOMATION: Running Flow 3 of 3 (GAME28THBIRTHDAY)
+@REM ECHO.
+@REM ECHO *************************************************************************
+@REM ECHO * Starting Flow 3: 05_GAME28THBIRTHDAY (May take a moment)
+@REM ECHO *************************************************************************
+@REM ECHO. >> "%LOG_FILE_NAME%"
+@REM ECHO Starting Flow 3: 05_GAME28THBIRTHDAY >> "%LOG_FILE_NAME%"
+@REM ECHO Flow 3 Start Time: %DATE% %TIME% >> "%LOG_FILE_NAME%"
+@REM CALL "%MASTER_DIR%\05_game28thbirthday.bat" >> "%LOG_FILE_NAME%" 2>&1
+@REM ECHO Flow 3 End Time: %DATE% %TIME% >> "%LOG_FILE_NAME%"
+@REM ECHO ------------------------------------------------------------------------- >> "%LOG_FILE_NAME%"
+@REM ECHO *************************************************************************
+@REM ECHO * Flow 3 Complete at %TIME%
+@REM ECHO *************************************************************************
 
 REM =========================================================================
 REM FINAL CLEANUP (POST-RUN)
