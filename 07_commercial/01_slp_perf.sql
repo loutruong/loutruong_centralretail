@@ -60,10 +60,11 @@ WHERE
 	-- 	-- OR SALE_DATE BETWEEN '01-JAN-2026' AND '25-MAY-2026'
 	-- 	-- OR SALE_DATE BETWEEN '01-JAN-2026' AND '31-MAR-2026'
 	-- )
-	AND (sale_date BETWEEN '16-JUN-2026' AND '16-JUN-2026')
+	-- AND (sale_date BETWEEN '16-JUN-2026' AND '16-JUN-2026')
+	AND SALE_DATE >= '17-JUN-2026'
 	AND LOWER(SUPPLIER_CODE) IN ('00_all_omni')
 	AND LOWER(DIMENSION_GROUP) IN ('channel')
-	AND LOWER(DIMENSION) IN ('app')
+	AND LOWER(DIMENSION) IN ('omni', 'app')
 	-- AND LOWER(DIMENSION) IN ('omni', 'app') // 'omni', 'app', 'web', 'etc'
 ORDER BY
 	sale_date ASC
