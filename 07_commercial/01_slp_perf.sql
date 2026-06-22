@@ -97,11 +97,31 @@ FROM
 	crv_data.LOUTRUONG_SUPPLIER_PERF_DI
 WHERE
 	1 = 1
-	AND (sale_date BETWEEN '16-JUN-2026' AND '16-JUN-2026')
+	-- AND (sale_date BETWEEN '16-JUN-2026' AND '16-JUN-2026')
+	AND sale_date >= '17-JUN-2026'
 	AND LOWER(SUPPLIER_CODE) IN ('00_all_omni')
 	AND LOWER(DIMENSION_GROUP) IN ('channel', 'customer_type')
 	AND LOWER(DIMENSION) IN ('app', 'b2b', 'b2c')
 ORDER BY
 	sale_date ASC,
 	dimension ASC
+;
+
+SELECT
+	MIN(sale_date) AS start_date,
+	MAX(sale_date) AS end_date,
+	dimension,
+	SUM(net_sales) AS net_sales,
+	SUM(ord_cnt)   AS ord_cnt
+FROM
+	crv_data.LOUTRUONG_SUPPLIER_PERF_DI
+WHERE
+	1 = 1
+	AND (sale_date BETWEEN '01-JAN-2026' AND '31-MAY-2026')
+	-- AND sale_date >= '01-JAN-2026'
+	AND LOWER(SUPPLIER_CODE) IN ('00_all_omni')
+	AND LOWER(DIMENSION_GROUP) IN ('channel', 'customer_type')
+	AND LOWER(DIMENSION) IN ('app')
+GROUP BY
+	dimension
 ;
