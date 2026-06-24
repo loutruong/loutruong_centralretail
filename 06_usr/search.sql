@@ -28,10 +28,10 @@ WHERE
 	1 = 1
 	AND (event_time BETWEEN '2026-02-01 00:00:00+07' AND '2026-03-01 00:00:00+07')
 	AND LOWER(is_primary_attribution) = 'true'
-	AND event_name = 'af_search'
+	AND LOWER(event_name) IN ('af_search')
 GROUP BY
 	1,
-	2 -- Grouping by the first and second columns (mm and search_term)
+	2
 HAVING
 	(event_value::jsonb ->> 'af_search_string') IS NOT NULL
 ORDER BY
