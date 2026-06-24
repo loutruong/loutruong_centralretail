@@ -71,24 +71,6 @@ ORDER BY
 ;
 
 SELECT
-	*
-FROM
-	crv_data.loutruong_supplier_byr_perf_di
-WHERE
-	1 = 1
-	-- AND (sale_date BETWEEN ADD_MONTHS (TRUNC(SYSDATE - 1, 'YYYY'), -12) AND TRUNC(SYSDATE - 1))
-	-- AND supplier_code IN (
-	-- 	SELECT
-	-- 		supplier_code
-	-- 	FROM
-	-- 		omni_digimgr.loutruong_dim_supplier
-	-- )
-ORDER BY
-	sale_date ASC,
-	supplier_code ASC
-;
-
-SELECT
 	sale_date AS ds,
 	dimension,
 	net_sales,
@@ -98,7 +80,7 @@ FROM
 WHERE
 	1 = 1
 	-- AND (sale_date BETWEEN '16-JUN-2026' AND '16-JUN-2026')
-	AND sale_date >= '17-JUN-2026'
+	AND sale_date >= '18-JUN-2026'
 	AND LOWER(SUPPLIER_CODE) IN ('00_all_omni')
 	AND LOWER(DIMENSION_GROUP) IN ('channel', 'customer_type')
 	AND LOWER(DIMENSION) IN ('app', 'b2b', 'b2c')
