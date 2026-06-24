@@ -93,7 +93,7 @@ WITH
 					bigc_tracking_db.bigc_tracking.in_app_event_organic_ios
 			)
 		WHERE
-			(event_time BETWEEN '2025-08-01 00:00:00+07' AND '2025-08-31 23:59:59+07')
+			(event_time BETWEEN '2026-04-01 00:00:00+07' AND '2026-04-30 23:59:59+07')
 			AND LOWER(is_primary_attribution) = 'true'
 			AND LOWER(event_name) IN ('af_search')
 		GROUP BY
