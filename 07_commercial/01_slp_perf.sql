@@ -60,18 +60,18 @@ WHERE
 	-- 	-- OR SALE_DATE BETWEEN '01-JAN-2026' AND '25-MAY-2026'
 	-- 	-- OR SALE_DATE BETWEEN '01-JAN-2026' AND '31-MAR-2026'
 	-- )
-	-- AND (sale_date BETWEEN '16-JUN-2026' AND '16-JUN-2026')
-	AND SALE_DATE >= '17-JUN-2026'
+	-- AND (SALE_DATE BETWEEN '16-JUN-2026' AND '16-JUN-2026')
+	AND SALE_DATE >= '16-JUN-2026'
 	AND LOWER(SUPPLIER_CODE) IN ('00_all_omni')
 	AND LOWER(DIMENSION_GROUP) IN ('channel')
 	AND LOWER(DIMENSION) IN ('omni', 'app')
 	-- AND LOWER(DIMENSION) IN ('omni', 'app') // 'omni', 'app', 'web', 'etc'
 ORDER BY
-	sale_date ASC
+	SALE_DATE ASC
 ;
 
 SELECT
-	sale_date AS ds,
+	SALE_DATE AS ds,
 	dimension,
 	net_sales,
 	ord_cnt
@@ -79,19 +79,19 @@ FROM
 	crv_data.LOUTRUONG_SUPPLIER_PERF_DI
 WHERE
 	1 = 1
-	-- AND (sale_date BETWEEN '16-JUN-2026' AND '16-JUN-2026')
-	AND sale_date >= '18-JUN-2026'
+	-- AND (SALE_DATE BETWEEN '16-JUN-2026' AND '16-JUN-2026')
+	AND SALE_DATE >= '18-JUN-2026'
 	AND LOWER(SUPPLIER_CODE) IN ('00_all_omni')
 	AND LOWER(DIMENSION_GROUP) IN ('channel', 'customer_type')
 	AND LOWER(DIMENSION) IN ('app', 'b2b', 'b2c')
 ORDER BY
-	sale_date ASC,
+	SALE_DATE ASC,
 	dimension ASC
 ;
 
 SELECT
-	MIN(sale_date) AS start_date,
-	MAX(sale_date) AS end_date,
+	MIN(SALE_DATE) AS start_date,
+	MAX(SALE_DATE) AS end_date,
 	dimension,
 	SUM(net_sales) AS net_sales,
 	SUM(ord_cnt)   AS ord_cnt
@@ -99,8 +99,8 @@ FROM
 	crv_data.LOUTRUONG_SUPPLIER_PERF_DI
 WHERE
 	1 = 1
-	AND (sale_date BETWEEN '01-JAN-2026' AND '31-MAY-2026')
-	-- AND sale_date >= '01-JAN-2026'
+	AND (SALE_DATE BETWEEN '01-JAN-2026' AND '31-MAY-2026')
+	-- AND SALE_DATE >= '01-JAN-2026'
 	AND LOWER(SUPPLIER_CODE) IN ('00_all_omni')
 	AND LOWER(DIMENSION_GROUP) IN ('channel', 'customer_type')
 	AND LOWER(DIMENSION) IN ('app')
