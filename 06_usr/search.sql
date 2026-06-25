@@ -1,41 +1,35 @@
+-- Active: 1757065616767@@10.250.139.30@5432@bigc_tracking_db
 SELECT
-	TO_CHAR(event_time, 'YYYY-MM')              AS mm,
-	(event_value::jsonb ->> 'af_search_string') AS search_term,
-	COUNT(*)                                    AS search_volume
-FROM
-	(
-		SELECT
-			*
-		FROM
-			bigc_tracking_db.bigc_tracking.in_app_event_non_organic_androids
-		UNION ALL
-		SELECT
-			*
-		FROM
-			bigc_tracking_db.bigc_tracking.in_app_event_non_organic_ios
-		UNION ALL
-		SELECT
-			*
-		FROM
-			bigc_tracking_db.bigc_tracking.in_app_event_organic_androids
-		UNION ALL
-		SELECT
-			*
-		FROM
-			bigc_tracking_db.bigc_tracking.in_app_event_organic_ios
-	) AS raw_events
-WHERE
-	1 = 1
-	AND (event_time BETWEEN '2026-02-01 00:00:00+07' AND '2026-03-01 00:00:00+07')
-	AND LOWER(is_primary_attribution) = 'true'
-	AND LOWER(event_name) IN ('af_search')
-GROUP BY
-	1,
-	2
-HAVING
-	(event_value::jsonb ->> 'af_search_string') IS NOT NULL
-ORDER BY
-	search_volume DESC
+	VERSION()
+;
+
+WITH raw AS (
+    SELECT * FROM bigc_tracking_db.bigc_tracking.in_app_event_non_organic_androids
+    UNION ALL
+    SELECT * FROM bigc_tracking_db.bigc_tracking.in_app_event_non_organic_ios
+    UNION ALL
+    SELECT * FROM bigc_tracking_db.bigc_tracking.in_app_event_organic_androids
+    UNION ALL
+    SELECT * FROM bigc_tracking_db.bigc_tracking.in_app_event_organic_ios
+),
+cleaned AS (
+    SELECT
+        *,
+        regexp_replace(event_value, '\\u00[01][0-9a-fA-F]', '', 'g') AS event_value_safe
+    FROM raw
+    WHERE
+        event_time BETWEEN '2026-05-01 00:00:00+07' AND '2026-05-31 23:59:59+07'
+        AND LOWER(is_primary_attribution) = 'true'
+        AND LOWER(event_name) = 'af_search'
+        AND event_value IS JSON
+)
+SELECT
+    TO_CHAR(event_time, 'YYYY-MM')                  AS mm,
+    event_value_safe::jsonb ->> 'af_search_string'  AS search_term,
+    COUNT(*)                                         AS search_volume
+FROM cleaned
+GROUP BY 1, 2
+ORDER BY 3 DESC
 ;
 
 --SELECT
