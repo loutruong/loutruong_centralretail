@@ -1,3 +1,4 @@
+-- Active: 1763694043295@@ora-dwhdb-pri.centralretail.com.vn@1521
 WITH
     base AS (
         SELECT
@@ -180,4 +181,42 @@ FROM
     bigc_tracking_db.bigc_tracking.in_app_event_non_organic_androids
 LIMIT
     10
+;
+
+SELECT
+    *
+FROM
+    crv_data.loutruong_supplier_perf_di
+WHERE
+    1 = 1
+    AND sale_date >= '14-JUL-2026'
+    AND supplier_code IN (
+        SELECT
+            supplier_code
+        FROM
+            omni_digimgr.loutruong_dim_supplier
+    )
+ORDER BY
+    sale_date ASC,
+    supplier_code ASC,
+    dimension_group ASC,
+    dimension ASC
+;
+
+SELECT
+    *
+FROM
+    crv_data.loutruong_supplier_byr_perf_di
+WHERE
+    1 = 1
+    AND sale_date >= '14-JUL-2026'
+    AND supplier_code IN (
+        SELECT
+            supplier_code
+        FROM
+            omni_digimgr.loutruong_dim_supplier
+    )
+ORDER BY
+    sale_date ASC,
+    supplier_code ASC
 ;
