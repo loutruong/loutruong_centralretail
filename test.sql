@@ -1,4 +1,4 @@
--- Active: 1763694043295@@ora-dwhdb-pri.centralretail.com.vn@1521
+-- Active: 1757065616767@@10.250.139.30@5432@bigc_tracking_db
 WITH
     base AS (
         SELECT
@@ -224,19 +224,42 @@ ORDER BY
 SELECT
     *
 FROM
-    crv_data.loutruong_supplier_perf_di
+    (
+        SELECT
+            CASE
+                WHEN LOWER(is_retargeting) IN ('true') THEN 'and_event_non_organic_retargeting'
+                ELSE 'and_event_non_organic'
+            END AS table_name,
+            *
+        FROM
+            bigc_tracking_db.bigc_tracking.in_app_event_non_organic_androids
+        UNION ALL
+        SELECT
+            CASE
+                WHEN LOWER(is_retargeting) IN ('true') THEN 'ios_event_non_organic_retargeting'
+                ELSE 'ios_event_non_organic'
+            END AS table_name,
+            *
+        FROM
+            bigc_tracking_db.bigc_tracking.in_app_event_non_organic_ios
+        UNION ALL
+        SELECT
+            'and_event_organic' AS table_name,
+            *
+        FROM
+            bigc_tracking_db.bigc_tracking.in_app_event_organic_androids
+        UNION ALL
+        SELECT
+            'ios_event_organic' AS table_name,
+            *
+        FROM
+            bigc_tracking_db.bigc_tracking.in_app_event_organic_ios
+    )
 WHERE
     1 = 1
-    AND sale_date >= '21-JUL-2026'
-    AND supplier_code IN (
-        SELECT
-            supplier_code
-        FROM
-            omni_digimgr.loutruong_dim_supplier
-    )
-ORDER BY
-    sale_date ASC,
-    supplier_code ASC,
-    dimension_group ASC,
-    dimension ASC
+    AND event_time >= CURRENT_DATE - INTERVAL '1 day'
+    AND LOWER(is_primary_attribution) = 'true'
+    AND LOWER(event_name) IN ('af_search')
+LIMIT
+    10
 ;
