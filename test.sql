@@ -263,3 +263,104 @@ WHERE
 LIMIT
     10
 ;
+
+WITH
+    t_dwd AS (
+        SELECT
+            *
+        FROM
+            (
+                SELECT
+                    CASE
+                        WHEN LOWER(is_retargeting) IN ('true') THEN 'and_event_non_organic_retargeting'
+                        ELSE 'and_event_non_organic'
+                    END AS table_name,
+                    *
+                FROM
+                    bigc_tracking_db.bigc_tracking.in_app_event_non_organic_androids
+                UNION ALL
+                SELECT
+                    CASE
+                        WHEN LOWER(is_retargeting) IN ('true') THEN 'ios_event_non_organic_retargeting'
+                        ELSE 'ios_event_non_organic'
+                    END AS table_name,
+                    *
+                FROM
+                    bigc_tracking_db.bigc_tracking.in_app_event_non_organic_ios
+                UNION ALL
+                SELECT
+                    'and_event_organic' AS table_name,
+                    *
+                FROM
+                    bigc_tracking_db.bigc_tracking.in_app_event_organic_androids
+                UNION ALL
+                SELECT
+                    'ios_event_organic' AS table_name,
+                    *
+                FROM
+                    bigc_tracking_db.bigc_tracking.in_app_event_organic_ios
+            )
+        WHERE
+            1 = 1
+            AND event_time >= CURRENT_DATE - INTERVAL '1 day'
+            AND LOWER(is_primary_attribution) = 'true'
+    )
+SELECT
+    event_name,
+    COUNT(*)   AS ROWS
+FROM
+    t_dwd
+GROUP BY
+    event_name
+ORDER BY
+    COUNT(*) DESC
+;
+
+SELECT
+    *
+FROM
+    (
+        SELECT
+            *
+        FROM
+            (
+                SELECT
+                    CASE
+                        WHEN LOWER(is_retargeting) IN ('true') THEN 'and_event_non_organic_retargeting'
+                        ELSE 'and_event_non_organic'
+                    END AS table_name,
+                    *
+                FROM
+                    bigc_tracking_db.bigc_tracking.in_app_event_non_organic_androids
+                UNION ALL
+                SELECT
+                    CASE
+                        WHEN LOWER(is_retargeting) IN ('true') THEN 'ios_event_non_organic_retargeting'
+                        ELSE 'ios_event_non_organic'
+                    END AS table_name,
+                    *
+                FROM
+                    bigc_tracking_db.bigc_tracking.in_app_event_non_organic_ios
+                UNION ALL
+                SELECT
+                    'and_event_organic' AS table_name,
+                    *
+                FROM
+                    bigc_tracking_db.bigc_tracking.in_app_event_organic_androids
+                UNION ALL
+                SELECT
+                    'ios_event_organic' AS table_name,
+                    *
+                FROM
+                    bigc_tracking_db.bigc_tracking.in_app_event_organic_ios
+            )
+        WHERE
+            1 = 1
+            AND event_time >= CURRENT_DATE - INTERVAL '1 day'
+            AND LOWER(is_primary_attribution) = 'true'
+    )
+ORDER BY
+    event_time ASC
+LIMIT
+    100
+;
