@@ -317,7 +317,15 @@ ORDER BY
 ;
 
 SELECT
-    *
+    event_time,
+    event_name CAST(JSON_VALUE (event_value, '$.data_header.site_id') AS INT64) AS site_id,
+    CAST(JSON_VALUE (event_value, '$.data_header.mc_user_id') AS INT64)         AS mc_user_id,
+    JSON_VALUE (event_value, '$.data_header.phone_number')                      AS phone_number,
+    JSON_VALUE (event_value, '$.data_header.the1_card')                         AS the1_card,
+    JSON_VALUE (event_value, '$.data_header.platform')                          AS platform,
+    JSON_VALUE (event_value, '$.af_search_string')                              AS af_search_string,
+    JSON_VALUE (event_value, '$.af_search_suggestion')                          AS af_search_suggestion,
+    JSON_VALUE (event_value, '$.previous_page')                                 AS previous_page
 FROM
     (
         SELECT
@@ -363,4 +371,61 @@ ORDER BY
     event_time ASC
 LIMIT
     100
+;
+
+WITH
+    t_dwd AS (
+        SELECT
+            *
+        FROM
+            (
+                SELECT
+                    CASE
+                        WHEN LOWER(is_retargeting) IN ('true') THEN 'and_event_non_organic_retargeting'
+                        ELSE 'and_event_non_organic'
+                    END AS table_name,
+                    *
+                FROM
+                    bigc_tracking_db.bigc_tracking.in_app_event_non_organic_androids
+                UNION ALL
+                SELECT
+                    CASE
+                        WHEN LOWER(is_retargeting) IN ('true') THEN 'ios_event_non_organic_retargeting'
+                        ELSE 'ios_event_non_organic'
+                    END AS table_name,
+                    *
+                FROM
+                    bigc_tracking_db.bigc_tracking.in_app_event_non_organic_ios
+                UNION ALL
+                SELECT
+                    'and_event_organic' AS table_name,
+                    *
+                FROM
+                    bigc_tracking_db.bigc_tracking.in_app_event_organic_androids
+                UNION ALL
+                SELECT
+                    'ios_event_organic' AS table_name,
+                    *
+                FROM
+                    bigc_tracking_db.bigc_tracking.in_app_event_organic_ios
+            )
+        WHERE
+            1 = 1
+            AND event_time >= '2026-07-20 00:00:00+07'
+            AND LOWER(is_primary_attribution) = 'true'
+            AND LOWER(event_name) IN ('searching')
+    )
+SELECT
+    event_time,
+    event_name,
+    (JSON_VALUE (event_value, '$.data_header.site_id'))::NUMERIC    AS site_id,
+    (JSON_VALUE (event_value, '$.data_header.mc_user_id'))::NUMERIC AS mc_user_id,
+    JSON_VALUE (event_value, '$.data_header.phone_number')          AS phone_number,
+    JSON_VALUE (event_value, '$.data_header.the1_card')             AS the1_card,
+    JSON_VALUE (event_value, '$.data_header.platform')              AS platform,
+    JSON_VALUE (event_value, '$.af_search_string')                  AS af_search_string,
+    JSON_VALUE (event_value, '$.af_search_suggestion')              AS af_search_suggestion,
+    JSON_VALUE (event_value, '$.previous_page')                     AS previous_page
+FROM
+    t_dwd
 ;
