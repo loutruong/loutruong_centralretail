@@ -412,12 +412,13 @@ WITH
         WHERE
             1 = 1
             AND event_time >= '2026-07-20 00:00:00+07'
-            AND LOWER(is_primary_attribution) = 'true'
+            -- AND LOWER(is_primary_attribution) = 'true'
             AND LOWER(event_name) IN ('searching')
     )
 SELECT
     event_time,
     event_name,
+    event_value,
     (JSON_VALUE (event_value, '$.data_header.site_id'))::NUMERIC    AS site_id,
     (JSON_VALUE (event_value, '$.data_header.mc_user_id'))::NUMERIC AS mc_user_id,
     JSON_VALUE (event_value, '$.data_header.phone_number')          AS phone_number,
@@ -428,4 +429,6 @@ SELECT
     JSON_VALUE (event_value, '$.previous_page')                     AS previous_page
 FROM
     t_dwd
+ORDER BY
+    event_time ASC
 ;
