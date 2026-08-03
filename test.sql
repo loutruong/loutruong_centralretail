@@ -432,3 +432,17 @@ FROM
 ORDER BY
     event_time ASC
 ;
+
+WITH
+    t_dim AS (
+        SELECT
+            id,
+            MAX(NAME) AS NAME
+        FROM
+            a
+    )
+SELECT
+    *
+FROM
+    b
+;
