@@ -37,7 +37,7 @@ WITH
 			)
 		WHERE
 			1 = 1
-			AND event_time >= CURRENT_DATE - INTERVAL '1 day'
+			AND event_time >= CURRENT_DATE - INTERVAL '10 day'
 			-- AND (event_time BETWEEN '2026-07-01 00:00:00+07' AND '2026-07-31 23:59:59+07')
 			-- AND event_time >= '2026-05-25 00:00:00+07'
 			AND LOWER(is_primary_attribution) = 'true'
