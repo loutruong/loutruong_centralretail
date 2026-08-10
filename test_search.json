@@ -1,0 +1,50 @@
+[
+	{
+		"data_header": {
+			"site_id": 25,
+			"mc_user_id": 1539899,
+			"phone_number": "0886626811",
+			"the1_card": "3101729823639",
+			"platform": "app"
+		},
+		"af_search_string": "gạo",
+		"af_search_suggestion": "gạo",
+		"previous_page": "Home screen"
+	},
+	{
+		"data_header": {
+			"site_id": 34,
+			"mc_user_id": 1792688,
+			"phone_number": "0984940639",
+			"the1_card": "3101151597795",
+			"platform": "app"
+		},
+		"af_search_string": "rau",
+		"af_search_suggestion": "Rau củ sấy khô",
+		"previous_page": "Home screen"
+	},
+	{
+		"af_search_suggestion": "Quần đùi nam",
+		"data_header": {
+			"site_id": 34,
+			"mc_user_id": 1791396,
+			"phone_number": "0903123789",
+			"the1_card": "3101343410208",
+			"platform": "app"
+		},
+		"af_search_string": "quần đùi",
+		"previous_page": "Home screen"
+	},
+	{
+		"af_search_suggestion": null,
+		"data_header": {
+			"site_id": 34,
+			"mc_user_id": 1791396,
+			"phone_number": "0903123789",
+			"the1_card": "3101343410208",
+			"platform": "app"
+		},
+		"af_search_string": "mít sấy",
+		"previous_page": "Vendor screen"
+	}
+]
