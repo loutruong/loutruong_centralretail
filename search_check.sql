@@ -56,7 +56,8 @@ FROM
     ) src
 WHERE
     1 = 1
-    AND event_time >= '2026-07-20 00:00:00+07'
+    -- AND (event_time BETWEEN CURRENT_DATE - INTERVAL '10 day' AND CURRENT_DATE)
+    AND (event_time BETWEEN '2026-08-08 00:00:00+07' AND '2026-08-08 23:59:59+07')
     AND LOWER(is_primary_attribution) = 'true'
     AND LOWER(event_name) IN ('searching')
 ;
