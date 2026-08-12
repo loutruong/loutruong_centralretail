@@ -446,3 +446,21 @@ SELECT
 FROM
     b
 ;
+
+SELECT
+    *
+FROM
+    (
+        SELECT
+            *
+        FROM
+            a
+    ) AS t1
+    LEFT JOIN (
+        SELECT
+            *
+        FROM
+            b
+    ) AS t2 ON t1.x = t2.y
+    AND t1.a = t2.b
+    AND t1.i >= t2.j
