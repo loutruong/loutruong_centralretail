@@ -5,7 +5,7 @@ REM --- CONFIGURATION ---
 SET "ANACONDA_BASE_DIR=C:\Users\tt20368267\AppData\Local\anaconda3"
 
 REM Define the Global Base Path (No trailing slash)
-SET "BASE_PATH=D:\OneDrive - Central Group\Stella's files - 1. HAND OVER\3. REPORT DAILY\01_code\loutruong\02_auto"
+SET "BASE_PATH=D:\OneDrive - Central Group\Stella's files - 1. HAND OVER\03. REPORT DAILY\01_code\loutruong\02_auto"
 
 REM Define the specific file
 SET "FILE_NAME=01_slp_perf.ipynb"
