@@ -2,9 +2,10 @@
 SETLOCAL ENABLEDELAYEDEXPANSION
 
 REM =========================================================================
-REM ** REMOVED: EXCEL PROCESS CLEANUP (PRE-RUN) **
-REM The Python script's robust 'finally' block now handles cleanup,
-REM making this force-kill step unnecessary and unsafe.
+REM ** EXCEL PROCESS CLEANUP IS HANDLED BY THE NOTEBOOKS **
+REM Every notebook closes its workbook and quits its own hidden Excel
+REM instance in a try/finally block, on success AND on failure, so no
+REM force-kill step is needed here (and none would be safe).
 REM =========================================================================
 
 REM =========================================================================
@@ -12,23 +13,19 @@ REM CONFIGURATION & LOGGING SETUP
 REM =========================================================================
 TITLE AUTOMATION: Initializing...
 
-REM --- 1. SET THE EXPLICIT PATH TO YOUR PYTHON EXECUTABLE (Keeping this for completeness, though unused) ---
-SET "PYTHON_EXEC=C:\Users\tt20368267\AppData\Local\anaconda3\python.exe"
-
-REM --- 2. DEFINE CODE PATHS ---
+REM --- 1. DEFINE CODE PATHS ---
 SET "MASTER_DIR=D:\OneDrive - Central Group\Stella's files - 1. HAND OVER\03. REPORT DAILY\01_code\loutruong\03_batch_run"
 SET "LOG_FILE_DIR=D:\Automation_Logs"
 
-REM --- 3. SAFE TIMESTAMP GENERATION (avoids regional format errors) ---
-FOR /F "tokens=1-4 delims=/ " %%a IN ('date /t') DO (
-    SET current_date=%%c%%a%%b
-)
-REM Added :~0,-2 to remove milliseconds, making the time format safer
-FOR /F "tokens=1-3 delims=.:" %%a IN ("%time%") DO (
-    SET current_time=%%a%%b%%c
-)
-SET "TIMESTAMP=%current_date%%current_time%"
-SET "LOG_FILE_NAME=%LOG_FILE_DIR%\Automation_Log%TIMESTAMP%.txt"
+REM --- 2. FLOWS TO RUN (enable / disable a flow by editing the CALL lines in the EXECUTION FLOW section) ---
+SET "TOTAL_FLOWS=2"
+SET "FAILED_FLOWS="
+
+REM --- 3. SAFE TIMESTAMP GENERATION (PowerShell: identical on every regional date/time format) ---
+SET "TIMESTAMP="
+FOR /F "usebackq delims=" %%i IN (`powershell -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmmss"`) DO SET "TIMESTAMP=%%i"
+IF NOT DEFINED TIMESTAMP SET "TIMESTAMP=%RANDOM%"
+SET "LOG_FILE_NAME=%LOG_FILE_DIR%\Automation_Log_%TIMESTAMP%.txt"
 
 REM Ensure the log directory exists
 IF NOT EXIST "%LOG_FILE_DIR%" MKDIR "%LOG_FILE_DIR%"
@@ -36,108 +33,83 @@ IF NOT EXIST "%LOG_FILE_DIR%" MKDIR "%LOG_FILE_DIR%"
 REM --- Console Start Confirmation ---
 ECHO =========================================================================
 ECHO Starting Automation Flow at %TIME%
+ECHO Log file: "%LOG_FILE_NAME%"
 ECHO =========================================================================
 
 REM --- Log Start ---
 ECHO ========================================================================= > "%LOG_FILE_NAME%"
 ECHO STARTING AUTOMATION FLOW >> "%LOG_FILE_NAME%"
 ECHO Start Time (General): %DATE% %TIME% >> "%LOG_FILE_NAME%"
-ECHO Total Flows to Run: 3 >> "%LOG_FILE_NAME%"
+ECHO Total Flows to Run: %TOTAL_FLOWS% >> "%LOG_FILE_NAME%"
 ECHO ------------------------------------------------------------------------- >> "%LOG_FILE_NAME%"
 
 REM =========================================================================
 REM EXECUTION FLOW
+REM Each line: CALL :RUN_FLOW  flow-number  runner-bat  label
+REM A failed flow is logged as FAILED and the next flow still runs.
 REM =========================================================================
-
-REM --- FLOW 1: 01_slp_perf.bat ---
-TITLE AUTOMATION: Running Flow 1 of 3 (SLP_PERF)
-ECHO.
-ECHO *************************************************************************
-ECHO * Starting Flow 1: 01_SLP_PERF (May take a moment)
-ECHO *************************************************************************
-ECHO. >> "%LOG_FILE_NAME%"
-ECHO Starting Flow 1: 01_SLP_PERF >> "%LOG_FILE_NAME%"
-ECHO Flow 1 Start Time: %DATE% %TIME% >> "%LOG_FILE_NAME%"
-REM The actual Python execution happens inside this bat file.
-CALL "%MASTER_DIR%\01_slp_perf.bat" >> "%LOG_FILE_NAME%" 2>&1
-ECHO Flow 1 End Time: %DATE% %TIME% >> "%LOG_FILE_NAME%"
-ECHO ------------------------------------------------------------------------- >> "%LOG_FILE_NAME%"
-ECHO *************************************************************************
-ECHO * Flow 1 Complete at %TIME%
-ECHO *************************************************************************
-
-REM --- FLOW 2: 02_slp_byr_perf.bat ---
-TITLE AUTOMATION: Running Flow 2 of 3 (SLP_BYR_PERF)
-ECHO.
-ECHO *************************************************************************
-ECHO * Starting Flow 2: 02_SLP_BYR_PERF (May take a moment)
-ECHO *************************************************************************
-ECHO. >> "%LOG_FILE_NAME%"
-ECHO Starting Flow 2: 02_SLP_BYR_PERF >> "%LOG_FILE_NAME%"
-ECHO Flow 2 Start Time: %DATE% %TIME% >> "%LOG_FILE_NAME%"
-CALL "%MASTER_DIR%\02_slp_byr_perf.bat" >> "%LOG_FILE_NAME%" 2>&1
-ECHO Flow 2 End Time: %DATE% %TIME% >> "%LOG_FILE_NAME%"
-ECHO ------------------------------------------------------------------------- >> "%LOG_FILE_NAME%"
-ECHO *************************************************************************
-ECHO * Flow 2 Complete at %TIME%
-ECHO *************************************************************************
-
-@REM REM --- FLOW 3: 03_slp_perf_tet.bat ---
-@REM TITLE AUTOMATION: Running Flow 3 of 3 (SLP_PERF_TET)
-@REM ECHO.
-@REM ECHO *************************************************************************
-@REM ECHO * Starting Flow 3: 03_SLP_PERF_TET (May take a moment)
-@REM ECHO *************************************************************************
-@REM ECHO. >> "%LOG_FILE_NAME%"
-@REM ECHO Starting Flow 3: 03_SLP_PERF_TET >> "%LOG_FILE_NAME%"
-@REM ECHO Flow 3 Start Time: %DATE% %TIME% >> "%LOG_FILE_NAME%"
-@REM CALL "%MASTER_DIR%\03_slp_perf_tet.bat" >> "%LOG_FILE_NAME%" 2>&1
-@REM ECHO Flow 3 End Time: %DATE% %TIME% >> "%LOG_FILE_NAME%"
-@REM ECHO ------------------------------------------------------------------------- >> "%LOG_FILE_NAME%"
-@REM ECHO *************************************************************************
-@REM ECHO * Flow 3 Complete at %TIME%
-@REM ECHO *************************************************************************
-
-@REM REM --- FLOW 3: 05_game28thbirthday.bat ---
-@REM TITLE AUTOMATION: Running Flow 3 of 3 (GAME28THBIRTHDAY)
-@REM ECHO.
-@REM ECHO *************************************************************************
-@REM ECHO * Starting Flow 3: 05_GAME28THBIRTHDAY (May take a moment)
-@REM ECHO *************************************************************************
-@REM ECHO. >> "%LOG_FILE_NAME%"
-@REM ECHO Starting Flow 3: 05_GAME28THBIRTHDAY >> "%LOG_FILE_NAME%"
-@REM ECHO Flow 3 Start Time: %DATE% %TIME% >> "%LOG_FILE_NAME%"
-@REM CALL "%MASTER_DIR%\05_game28thbirthday.bat" >> "%LOG_FILE_NAME%" 2>&1
-@REM ECHO Flow 3 End Time: %DATE% %TIME% >> "%LOG_FILE_NAME%"
-@REM ECHO ------------------------------------------------------------------------- >> "%LOG_FILE_NAME%"
-@REM ECHO *************************************************************************
-@REM ECHO * Flow 3 Complete at %TIME%
-@REM ECHO *************************************************************************
+CALL :RUN_FLOW 1 "01_slp_perf.bat" "SLP_PERF"
+CALL :RUN_FLOW 2 "02_slp_byr_perf.bat" "SLP_BYR_PERF"
+@REM CALL :RUN_FLOW 3 "03_slp_perf_tet.bat" "SLP_PERF_TET"
+@REM CALL :RUN_FLOW 3 "05_28thgamebirthday.bat" "GAME28THBIRTHDAY"
 
 REM =========================================================================
-REM FINAL CLEANUP (POST-RUN)
+REM FINAL STATUS (POST-RUN)
 REM =========================================================================
-TITLE AUTOMATION: Final cleanup...
+TITLE AUTOMATION: Final status...
 
-REM --- Log End ---
 ECHO. >> "%LOG_FILE_NAME%"
-ECHO FINAL STATUS: ALL 3 FLOWS FINISHED >> "%LOG_FILE_NAME%"
+IF "!FAILED_FLOWS!"=="" (
+    SET "MASTER_RC=0"
+    ECHO FINAL STATUS: ALL %TOTAL_FLOWS% FLOWS SUCCEEDED >> "%LOG_FILE_NAME%"
+    ECHO.
+    ECHO FINAL STATUS: ALL %TOTAL_FLOWS% FLOWS SUCCEEDED
+) ELSE (
+    SET "MASTER_RC=1"
+    ECHO FINAL STATUS: FAILED FLOWS:!FAILED_FLOWS! - check the log for SCRIPT_RESULT: FAILED lines >> "%LOG_FILE_NAME%"
+    ECHO.
+    ECHO FINAL STATUS: FAILED FLOWS:!FAILED_FLOWS! - check the log for SCRIPT_RESULT: FAILED lines
+)
 ECHO End Time (General): %DATE% %TIME% >> "%LOG_FILE_NAME%"
 ECHO ========================================================================= >> "%LOG_FILE_NAME%"
 
-REM ** REMOVED: EXCEL PROCESS CLEANUP (POST-RUN) **
-REM This section has been removed because the robust Python cleanup 
-REM (using xl.Quit() and pythoncom.CoUninitialize()) is now responsible 
-REM for closing the EXCEL.EXE process cleanly.
-ECHO Final cleanup complete (handled by Python script).
-
 ECHO.
 ECHO Automation completed. Detailed log file created at: "%LOG_FILE_NAME%"
-TITLE AUTOMATION: Finished!
+TITLE AUTOMATION: Finished
 
 REM CRITICAL: This PAUSE command will keep the window open so you can read the output.
 PAUSE
 
-ENDLOCAL
+ENDLOCAL & EXIT /B %MASTER_RC%
 
-EXIT /B
+
+REM =========================================================================
+REM SUBROUTINE: run one flow, log its start/end time and SUCCESS / FAILED
+REM =========================================================================
+:RUN_FLOW
+SET "FLOW_NUM=%~1"
+SET "FLOW_BAT=%~2"
+SET "FLOW_LABEL=%~3"
+TITLE AUTOMATION: Running Flow %FLOW_NUM% of %TOTAL_FLOWS% (%FLOW_LABEL%)
+ECHO.
+ECHO *************************************************************************
+ECHO * Starting Flow %FLOW_NUM%: %FLOW_LABEL% (May take a moment)
+ECHO *************************************************************************
+ECHO. >> "%LOG_FILE_NAME%"
+ECHO Starting Flow %FLOW_NUM%: %FLOW_LABEL% >> "%LOG_FILE_NAME%"
+ECHO Flow %FLOW_NUM% Start Time: %DATE% %TIME% >> "%LOG_FILE_NAME%"
+REM The actual Python execution happens inside this bat file.
+CALL "%MASTER_DIR%\%FLOW_BAT%" >> "%LOG_FILE_NAME%" 2>&1
+SET "FLOW_RC=%ERRORLEVEL%"
+ECHO Flow %FLOW_NUM% End Time: %DATE% %TIME% >> "%LOG_FILE_NAME%"
+IF "%FLOW_RC%"=="0" (
+    ECHO Flow %FLOW_NUM% STATUS: SUCCESS >> "%LOG_FILE_NAME%"
+    ECHO * Flow %FLOW_NUM% Complete at %TIME% - SUCCESS
+) ELSE (
+    SET "FAILED_FLOWS=!FAILED_FLOWS! %FLOW_NUM%"
+    ECHO Flow %FLOW_NUM% STATUS: FAILED - exit code %FLOW_RC% >> "%LOG_FILE_NAME%"
+    ECHO * Flow %FLOW_NUM% FAILED - exit code %FLOW_RC% - see the log
+)
+ECHO ------------------------------------------------------------------------- >> "%LOG_FILE_NAME%"
+ECHO *************************************************************************
+EXIT /B 0
