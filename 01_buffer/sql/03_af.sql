@@ -3,7 +3,6 @@
 -- @@ Input: bigc_tracking_db.bigc_tracking.in_app_event_non_organic_ios
 -- @@ Input: bigc_tracking_db.bigc_tracking.in_app_event_organic_androids
 -- @@ Input: bigc_tracking_db.bigc_tracking.in_app_event_organic_ios
-
 -- @@ Input: bigc_tracking_db.bigc_tracking.in_app_event_organic_ios
 SELECT
 	*
