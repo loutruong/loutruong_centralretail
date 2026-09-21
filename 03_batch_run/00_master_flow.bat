@@ -2,9 +2,10 @@
 SETLOCAL ENABLEDELAYEDEXPANSION
 
 REM =========================================================================
-REM ** EXCEL PROCESS CLEANUP IS HANDLED BY THE NOTEBOOKS **
+REM ** EXCEL PROCESS CLEANUP IS HANDLED BY auto_lib.paste_to_sheet **
 REM Every notebook closes its workbook and quits its own hidden Excel
-REM instance in a try/finally block, on success AND on failure, so no
+REM instance in a try/finally block, on success AND on failure, and a
+REM watchdog force-closes that EXCEL.EXE (by pid) if it lingers, so no
 REM force-kill step is needed here (and none would be safe).
 REM =========================================================================
 
@@ -45,13 +46,17 @@ ECHO ------------------------------------------------------------------------- >
 
 REM =========================================================================
 REM EXECUTION FLOW
-REM Each line: CALL :RUN_FLOW  flow-number  runner-bat  label
+REM Each line: CALL :RUN_FLOW  flow-number  notebook-file-name  label
 REM A failed flow is logged as FAILED and the next flow still runs.
+REM
+REM To add a flow: add one CALL :RUN_FLOW line below with the next flow
+REM number, the notebook file name and a label, then bump TOTAL_FLOWS
+REM above to match the new total number of active flows.
 REM =========================================================================
-CALL :RUN_FLOW 1 "01_slp_perf.bat" "SLP_PERF"
-CALL :RUN_FLOW 2 "02_slp_byr_perf.bat" "SLP_BYR_PERF"
-@REM CALL :RUN_FLOW 3 "03_slp_perf_tet.bat" "SLP_PERF_TET"
-@REM CALL :RUN_FLOW 3 "05_28thgamebirthday.bat" "GAME28THBIRTHDAY"
+CALL :RUN_FLOW 1 "01_slp_perf.ipynb" "SLP_PERF"
+CALL :RUN_FLOW 2 "02_slp_byr_perf.ipynb" "SLP_BYR_PERF"
+@REM CALL :RUN_FLOW 3 "03_slp_perf_tet.ipynb" "SLP_PERF_TET"
+@REM CALL :RUN_FLOW 3 "05_28thgamebirthday.ipynb" "GAME28THBIRTHDAY"   (notebook must live in 02_auto first)
 
 REM =========================================================================
 REM FINAL STATUS (POST-RUN)
@@ -88,7 +93,7 @@ REM SUBROUTINE: run one flow, log its start/end time and SUCCESS / FAILED
 REM =========================================================================
 :RUN_FLOW
 SET "FLOW_NUM=%~1"
-SET "FLOW_BAT=%~2"
+SET "FLOW_NB=%~2"
 SET "FLOW_LABEL=%~3"
 TITLE AUTOMATION: Running Flow %FLOW_NUM% of %TOTAL_FLOWS% (%FLOW_LABEL%)
 ECHO.
@@ -98,8 +103,8 @@ ECHO *************************************************************************
 ECHO. >> "%LOG_FILE_NAME%"
 ECHO Starting Flow %FLOW_NUM%: %FLOW_LABEL% >> "%LOG_FILE_NAME%"
 ECHO Flow %FLOW_NUM% Start Time: %DATE% %TIME% >> "%LOG_FILE_NAME%"
-REM The actual Python execution happens inside this bat file.
-CALL "%MASTER_DIR%\%FLOW_BAT%" >> "%LOG_FILE_NAME%" 2>&1
+REM run_notebook.bat does the actual Python execution for this notebook.
+CALL "%MASTER_DIR%\run_notebook.bat" "%FLOW_NB%" >> "%LOG_FILE_NAME%" 2>&1
 SET "FLOW_RC=%ERRORLEVEL%"
 ECHO Flow %FLOW_NUM% End Time: %DATE% %TIME% >> "%LOG_FILE_NAME%"
 IF "%FLOW_RC%"=="0" (
