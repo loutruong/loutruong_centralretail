@@ -75,3 +75,41 @@ FROM
 	t_dab
 	-- t_mab
 ;
+
+-- SELECT
+-- 	1 AS data_demo
+-- UNION
+-- SELECT
+-- 	10 AS data_demo
+-- UNION
+-- SELECT
+-- 	1 AS data_demo
+-- UNION
+-- SELECT
+-- 	100 AS data_demo
+-- UNION
+-- SELECT
+-- 	NULL AS data_demo
+-- ;
+SELECT
+	table_customer_name.customer_name AS data_demo,
+	t2.customer_name                  AS data_demo,
+	1                                 AS number
+FROM
+	(
+		SELECT
+			'Lou Truong' AS customer_name,
+			1            AS data_demo
+	) AS table_customer_name
+	LEFT JOIN (
+		SELECT
+			'Nam' AS customer_name,
+			1     AS data_demo
+	) AS t2 ON table_customer_name.data_demo = t2.data_demo
+;
+
+SELECT
+	*
+FROM
+	b
+;
