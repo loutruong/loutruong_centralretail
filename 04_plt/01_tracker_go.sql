@@ -76,40 +76,45 @@ FROM
 	-- t_mab
 ;
 
--- SELECT
--- 	1 AS data_demo
--- UNION
--- SELECT
--- 	10 AS data_demo
--- UNION
--- SELECT
--- 	1 AS data_demo
--- UNION
--- SELECT
--- 	100 AS data_demo
--- UNION
--- SELECT
--- 	NULL AS data_demo
--- ;
-SELECT
-	table_customer_name.customer_name AS data_demo,
-	t2.customer_name                  AS data_demo,
-	1                                 AS number
-FROM
-	(
-		SELECT
-			'Lou Truong' AS customer_name,
-			1            AS data_demo
-	) AS table_customer_name
-	LEFT JOIN (
-		SELECT
-			'Nam' AS customer_name,
-			1     AS data_demo
-	) AS t2 ON table_customer_name.data_demo = t2.data_demo
-;
-
 SELECT
 	*
 FROM
-	b
+	(
+		SELECT
+			CASE
+				WHEN LOWER(is_retargeting) IN ('true') THEN 'and_event_non_organic_retargeting'
+				ELSE 'and_event_non_organic'
+			END AS table_name,
+			*
+		FROM
+			bigc_tracking_db.bigc_tracking.in_app_event_non_organic_androids
+		UNION ALL
+		SELECT
+			CASE
+				WHEN LOWER(is_retargeting) IN ('true') THEN 'ios_event_non_organic_retargeting'
+				ELSE 'ios_event_non_organic'
+			END AS table_name,
+			*
+		FROM
+			bigc_tracking_db.bigc_tracking.in_app_event_non_organic_ios
+		UNION ALL
+		SELECT
+			'and_event_organic' AS table_name,
+			*
+		FROM
+			bigc_tracking_db.bigc_tracking.in_app_event_organic_androids
+		UNION ALL
+		SELECT
+			'ios_event_organic' AS table_name,
+			*
+		FROM
+			bigc_tracking_db.bigc_tracking.in_app_event_organic_ios
+	)
+WHERE
+	1 = 1
+	AND (event_time BETWEEN '2026-09-25 00:00:00+07' AND '2026-09-28 23:59:59+07')
+	AND LOWER(is_primary_attribution) = 'true'
+	AND LOWER(event_name) IN ('filter_apply')
+ORDER BY
+	event_time ASC
 ;
