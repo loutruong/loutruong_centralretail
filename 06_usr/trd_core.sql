@@ -1,5 +1,4 @@
-DROP TABLE IF EXISTS loutruongdataplatform1.loutruong_dwd.loutruong_crvgo_trd_core_di
-;
+DROP TABLE IF EXISTS loutruongdataplatform1.loutruong_dwd.loutruong_crvgo_trd_core_di;
 
 -- CREATE OR REPLACE EXTERNAL TABLE loutruongdataplatform1.loutruong_dwd.loutruong_crvgo_trd_core_di(
 --   `SALE_DATE` STRING,
@@ -28,6 +27,4 @@ SELECT
     MARGIN,
     QTY,
     PRODUCT_CODE
-FROM
-    loutruongdataplatform1.loutruong_dwd.loutruong_crvgo_trd_core_di
-;
+FROM loutruongdataplatform1.loutruong_dwd.loutruong_crvgo_trd_core_di;

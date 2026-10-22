@@ -1,26 +1,17 @@
 -- Active: 1757065616767@@10.250.139.30@5432@bigc_tracking_db
-SELECT
-	*
-FROM
-	crv_data.loutruong_supplier_perf_di
+SELECT *
+FROM crv_data.loutruong_supplier_perf_di
 WHERE
-	1 = 1
-	AND TO_CHAR(SALE_DATE, 'yyyy-mm-dd') BETWEEN '2025-10-01' AND '2025-10-31'
-	AND SUPPLIER_CODE IN ('00_all_omni')
-	AND DIMENSION_GROUP IN ('channel')
-    ;
+    1 = 1
+    AND TO_CHAR(SALE_DATE, 'yyyy-mm-dd') BETWEEN '2025-10-01' AND '2025-10-31'
+    AND SUPPLIER_CODE IN ('00_all_omni')
+    AND DIMENSION_GROUP IN ('channel');
 
 SELECT
-CASE 
-	WHEN ORDER_DATE is null THEN 1 
-	ELSE  0
-END as is_null
-FROM
-	CRV_DATA.HYPER_MKT_VOUCHER_DATA_OMS ;
+    CASE
+        WHEN ORDER_DATE IS NULL THEN 1
+        ELSE 0
+    END AS is_null
+FROM CRV_DATA.HYPER_MKT_VOUCHER_DATA_OMS;
 
-SELECT
-	*
-FROM
-	CRV_DATA.HYPER_MKT_VOUCHER_DATA_MC_APP ;
-
-	
+SELECT * FROM CRV_DATA.HYPER_MKT_VOUCHER_DATA_MC_APP;

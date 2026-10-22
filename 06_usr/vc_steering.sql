@@ -90,56 +90,67 @@ CREATE OR REPLACE EXTERNAL TABLE `loutruongdataplatform1.loutruong_dwd.ods_vouch
 -- =====================================================================
 -- [MODE B — DAILY]  Dynamic partition overwrite via MERGE (atomic).
 -- =====================================================================
-MERGE INTO `loutruongdataplatform1.loutruong_dwd.dwd_loutruong_voucher_di` AS t1
-USING (
-  SELECT
-    SAFE_CAST(SUBSTR(order_date, 1, 10) AS DATE) AS order_date,
-    order_no,
-    voucher_id,
-    voucher_vll_code,
-    voucher_public_code,
-    SAFE_CAST(voucher_discount_value AS NUMERIC) AS voucher_discount_value,
-    SAFE_CAST(voucher_mbs AS NUMERIC) AS voucher_mbs,
-    voucher_name,
-    SAFE_CAST(voucher_quantity_issue_daily AS INT64)
-      AS voucher_quantity_issue_daily,
-    gold_sv,
-    product_name,
-    division,
-    department,
-    is_complete,
-    customer_type,
-    customer_segment,
-    region,
-    site_name,
-    SAFE_CAST(app_gmv AS NUMERIC) AS app_gmv,
-    source_month,
-    SAFE_CAST(SUBSTR(order_date, 1, 10) AS DATE) AS ds
-  FROM `loutruongdataplatform1.loutruong_dwd.ods_voucher_df`
-  WHERE
-    SAFE_CAST(SUBSTR(order_date, 1, 10) AS DATE)
-    >= DATE_SUB((CURRENT_DATE() - 1), INTERVAL 7 DAY)
-) AS t2
-ON
-  FALSE
-    WHEN
-      NOT MATCHED BY SOURCE
-      AND t1.ds >= DATE_SUB((CURRENT_DATE() - 1), INTERVAL 7 DAY)
-      THEN DELETE
-    WHEN NOT MATCHED THEN INSERT ROW;
+MERGE INTO `loutruongdataplatform1.loutruong_dwd.dwd_loutruong_voucher_di` AS t1 USING (
+    SELECT
+        SAFE_CAST (
+            SUBSTR(order_date, 1, 10) AS DATE
+        ) AS order_date,
+        order_no,
+        voucher_id,
+        voucher_vll_code,
+        voucher_public_code,
+        SAFE_CAST (
+            voucher_discount_value AS NUMERIC
+        ) AS voucher_discount_value,
+        SAFE_CAST (voucher_mbs AS NUMERIC) AS voucher_mbs,
+        voucher_name,
+        SAFE_CAST (
+            voucher_quantity_issue_daily AS INT64
+        ) AS voucher_quantity_issue_daily,
+        gold_sv,
+        product_name,
+        division,
+        department,
+        is_complete,
+        customer_type,
+        customer_segment,
+        region,
+        site_name,
+        SAFE_CAST (app_gmv AS NUMERIC) AS app_gmv,
+        source_month,
+        SAFE_CAST (
+            SUBSTR(order_date, 1, 10) AS DATE
+        ) AS ds
+    FROM
+        `loutruongdataplatform1.loutruong_dwd.ods_voucher_df`
+    WHERE
+        SAFE_CAST (
+            SUBSTR(order_date, 1, 10) AS DATE
+        ) >= DATE_SUB(
+            (CURRENT_DATE() - 1),
+            INTERVAL 7 DAY
+        )
+) AS t2 ON FALSE WHEN NOT MATCHED BY SOURCE
+AND t1.ds >= DATE_SUB(
+    (CURRENT_DATE() - 1),
+    INTERVAL 7 DAY
+) THEN DELETE WHEN NOT MATCHED THEN
+INSERT
+    ROW;
 
 -- =====================================================================
 -- [QA]  Row counts and date span per source file.
 -- =====================================================================
 SELECT
-  source_month,
-  COUNT(*) AS r,
-  MIN(order_date) AS first_day,
-  MAX(order_date) AS last_day
-FROM `loutruongdataplatform1.loutruong_dwd.dwd_loutruong_voucher_di`
-GROUP BY source_month
+    source_month,
+    COUNT(*) AS r,
+    MIN(order_date) AS first_day,
+    MAX(order_date) AS LAST_DAY
+FROM
+    `loutruongdataplatform1.loutruong_dwd.dwd_loutruong_voucher_di`
+GROUP BY
+    source_month
 ORDER BY source_month;
-
 
 WITH
   base AS (
@@ -153,75 +164,74 @@ WITH
       CONCAT(voucher_discount_value / 1000, "k", " / ", voucher_mbs / 1000, "k")
         AS scheme,
 
-      -- voucher_type — numbered label; channel tags (CRM) win over occasion (birthday)
-      CASE
-        WHEN n LIKE '%sorry%' THEN '06_Apology (Sorry)'
-        WHEN n LIKE '%new customer%' AND n LIKE '%fresh%'
-          THEN '05_Fresh Food'  -- NEW: Fresh New Customer → Fresh Food (above New Customer)
-        WHEN n LIKE '%new customer%' THEN '01_New Customer'
-        WHEN n LIKE '%next purchase%' THEN '09_Next Purchase'
-        WHEN n LIKE '%livestream%' THEN '14_Livestream'
-        WHEN
-          REGEXP_CONTAINS(
-            n,
-            r'martech|\[zns\]|churn|ec voucher|moengage|\[moe\]|\[sms\]|zalo')
-          THEN
-            '04_CRM Push'  -- ABOVE birthday: "[ZNS] Member Birthday" = CRM push, not a store anniversary
-        WHEN n LIKE '%birthday%' THEN '11_Store Birthday'
-        WHEN REGEXP_CONTAINS(n, r'fresh|fruit festival') THEN '05_Fresh Food'
-        WHEN n LIKE '%milk day%'
-          THEN '03_Seasonal / Holiday / Thematic'  -- NEW: Mega extra Milk day → Seasonal (above Mega)
-        WHEN n LIKE '%mega%' THEN '02_Mega Campaign'
-        WHEN REGEXP_CONTAINS(n, r'minigame|lucky') THEN '07_Game / Minigame'
-        WHEN n LIKE '%the1%' THEN '08_Loyalty (The1)'
-        WHEN
-          REGEXP_CONTAINS(
-            n, r'vpbank|elmich|pns|pulse metrics| cp |partnership')
-          THEN '10_Partnership'
-        WHEN REGEXP_CONTAINS(n, r'opening|new store|new visual|renovation')
-          THEN '12_Store Launch / Reno'
-        WHEN
-          REGEXP_CONTAINS(
-            n,
-            r'target store support|\[target store\]|target audience|special event|fair|support')
-          THEN '13_Store Support & Targeting'
-        WHEN
-          REGEXP_CONTAINS(
-            n,
-            r'tet|year-end|tuần lễ vàng|8/3| mẹ|thiếu nhi|valentine|đại lễ|giỗ tổ|siêu sale|mở bát|international day|quốc tế|quốc khánh|khai xuân|festival|sale|deal|ưu đãi|tiệc sale|subcampaign|mừng|mooncake|trung thu|mid-autumn|tựu trường|12\.12')
-          THEN '03_Seasonal / Holiday / Thematic'
-        ELSE '99_Others'
-        END AS voucher_type,
+-- voucher_type — numbered label; channel tags (CRM) win over occasion (birthday)
+CASE
+    WHEN n LIKE '%sorry%' THEN '06_Apology (Sorry)'
+    WHEN n LIKE '%new customer%'
+    AND n LIKE '%fresh%' THEN '05_Fresh Food' -- NEW: Fresh New Customer → Fresh Food (above New Customer)
+    WHEN n LIKE '%new customer%' THEN '01_New Customer'
+    WHEN n LIKE '%next purchase%' THEN '09_Next Purchase'
+    WHEN n LIKE '%livestream%' THEN '14_Livestream'
+    WHEN REGEXP_CONTAINS (
+        n,
+        r 'martech|\[zns\]|churn|ec voucher|moengage|\[moe\]|\[sms\]|zalo'
+    ) THEN '04_CRM Push' -- ABOVE birthday: "[ZNS] Member Birthday" = CRM push, not a store anniversary
+    WHEN n LIKE '%birthday%' THEN '11_Store Birthday'
+    WHEN REGEXP_CONTAINS (n, r 'fresh|fruit festival') THEN '05_Fresh Food'
+    WHEN n LIKE '%milk day%' THEN '03_Seasonal / Holiday / Thematic' -- NEW: Mega extra Milk day → Seasonal (above Mega)
+    WHEN n LIKE '%mega%' THEN '02_Mega Campaign'
+    WHEN REGEXP_CONTAINS (n, r 'minigame|lucky') THEN '07_Game / Minigame'
+    WHEN n LIKE '%the1%' THEN '08_Loyalty (The1)'
+    WHEN REGEXP_CONTAINS (
+        n,
+        r 'vpbank|elmich|pns|pulse metrics| cp |partnership'
+    ) THEN '10_Partnership'
+    WHEN REGEXP_CONTAINS (
+        n,
+        r 'opening|new store|new visual|renovation'
+    ) THEN '12_Store Launch / Reno'
+    WHEN REGEXP_CONTAINS (
+        n,
+        r 'target store support|\[target store\]|target audience|special event|fair|support'
+    ) THEN '13_Store Support & Targeting'
+    WHEN REGEXP_CONTAINS (
+        n,
+        r 'tet|year-end|tuần lễ vàng|8/3| mẹ|thiếu nhi|valentine|đại lễ|giỗ tổ|siêu sale|mở bát|international day|quốc tế|quốc khánh|khai xuân|festival|sale|deal|ưu đãi|tiệc sale|subcampaign|mừng|mooncake|trung thu|mid-autumn|tựu trường|12\.12'
+    ) THEN '03_Seasonal / Holiday / Thematic'
+    ELSE '99_Others'
+END AS voucher_type,
 
-      -- clm_stage — WHO (lifecycle)
-      CASE
-        WHEN n LIKE '%new customer%' THEN 'New'
-        WHEN REGEXP_CONTAINS(n, r'churn|winback') THEN 'Churn'
-        WHEN REGEXP_CONTAINS(n, r'ec voucher|next purchase') THEN 'Existing'
-        ELSE 'All'
-        END AS clm_stage,
+-- clm_stage — WHO (lifecycle)
+CASE
+    WHEN n LIKE '%new customer%' THEN 'New'
+    WHEN REGEXP_CONTAINS (n, r 'churn|winback') THEN 'Churn'
+    WHEN REGEXP_CONTAINS (
+        n,
+        r 'ec voucher|next purchase'
+    ) THEN 'Existing'
+    ELSE 'All'
+END AS clm_stage,
 
-      -- division_scope
-      CASE
-        WHEN REGEXP_CONTAINS(n, r'fresh|fruit') THEN 'Fresh'
-        WHEN REGEXP_CONTAINS(n, r'milk|dairy') THEN 'Dairy'
-        ELSE 'Others'
-        END AS division_scope,
+-- division_scope
+CASE
+    WHEN REGEXP_CONTAINS (n, r 'fresh|fruit') THEN 'Fresh'
+    WHEN REGEXP_CONTAINS (n, r 'milk|dairy') THEN 'Dairy'
+    ELSE 'Others'
+END AS division_scope,
 
-      -- store_scope — [All] + untagged = Nationwide
-      CASE
-        WHEN REGEXP_CONTAINS(n, r'tier [1-4]|\[tier') THEN 'Targeted store tier'
-        WHEN n LIKE '%target audience%' THEN 'Targeted audience'
-        WHEN
-          REGEXP_CONTAINS(
-            n,
-            r'\[target store|birthday store|livestream -|renovation|special event|fair|opening|new store')
-          THEN 'Targeted store'
-        ELSE 'Nationwide'
-        END AS store_scope,
+-- store_scope — [All] + untagged = Nationwide
+CASE
+    WHEN REGEXP_CONTAINS (n, r 'tier [1-4]|\[tier') THEN 'Targeted store tier'
+    WHEN n LIKE '%target audience%' THEN 'Targeted audience'
+    WHEN REGEXP_CONTAINS (
+        n,
+        r '\[target store|birthday store|livestream -|renovation|special event|fair|opening|new store'
+    ) THEN 'Targeted store'
+    ELSE 'Nationwide'
+END AS store_scope,
 
-      -- banner / BU
-      CASE
+-- banner / BU
+CASE
         WHEN REGEXP_CONTAINS(n, r'go! & top|go & top') THEN 'GO! + Tops'
         WHEN REGEXP_CONTAINS(n, r'tops|thao dien') THEN 'Tops'
         ELSE 'GO!'
