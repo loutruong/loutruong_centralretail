@@ -1,4 +1,8 @@
 /**
+ * v1 - INACTIVE, kept for reference. v2 (Cobrand v2.gs) replaced it: no short links, new tabs and
+ * folders. The entry points below end in V1 so no trigger calls them any more; to run v1 again,
+ * swap the names of its entry points with the v2 ones.
+ *
  * Cobrand QR automation for the Generic and Store tabs (COBRAND_TABS); Link master is handled by
  * Code.gs. Tabs are found by sheet ID, so they can be renamed freely.
  *
@@ -141,7 +145,7 @@ const COBRAND_NOTE = {
  * creates the On-edit trigger and the backup trigger (only if they don't exist yet) and checks
  * the folders, the QR service and Short.io.
  */
-function cobrandSetup() {
+function cobrandSetupV1() {
 	const folderIds = COBRAND_TABS.filter((t) => t.qrFolderId).map(
 		(t) => t.qrFolderId,
 	)
@@ -165,7 +169,7 @@ function cobrandSetup() {
 }
 
 /** Simple-trigger part, called from onEdit in Code.gs: link_full and timestamps. */
-function cobrandOnEdit(e) {
+function cobrandOnEditV1(e) {
 	const edit = cobrandEditedRows_(e, (tab) => tab.inputCols)
 	if (!edit) return
 	const tab = edit.tab
@@ -179,7 +183,7 @@ function cobrandOnEdit(e) {
 }
 
 /** Installable On-edit trigger: short links and QR files for the rows an edit touched. */
-function onEditCobrand(e) {
+function onEditCobrandV1(e) {
 	const edit = cobrandEditedRows_(e, (tab) =>
 		tab.inputCols.concat([tab.col.SHORT, tab.col.QR]),
 	)
@@ -205,7 +209,7 @@ function onEditCobrand(e) {
 }
 
 /** Time-driven backup: link_full, short links and QRs for every row of every tab. */
-function cobrandSweep() {
+function cobrandSweepV1() {
 	const lock = LockService.getScriptLock()
 	if (!lock.tryLock(10 * 1000)) return // another run is busy; the next sweep catches up
 	try {
