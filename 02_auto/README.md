@@ -12,7 +12,7 @@ Thin notebooks that only hold the configuration (SQL, paths, sheet names); the w
     log.py                      log(): timestamped print
     dwh.py                      load_env(), init_oracle_client_once(), fetch_dataframe()
     excel.py                    ExcelJob + paste_to_sheet(): Open > Delete > Write > Refresh > Save > Close
-    xlsx_csv.py                 CsvJob + convert_folder(): Read > Standardize > Write > Schema
+    xlsx_csv.py                 CsvJob + convert_folder(): Read > Standardize > Write > Schema > Clean
 03_batch_run/
   00_master_flow.bat            MASTER - the only file to run: every flow in order + final status
   01_sub_flow.bat <notebook>    SUB FLOW called by the master, one notebook per call (nbconvert, then git)
@@ -30,6 +30,7 @@ Thin notebooks that only hold the configuration (SQL, paths, sheet names); the w
 - Tuning knobs (retries, waits, timeouts, chunk size, strict header check, ...): listed in the same cell with their defaults; pass one to `al.ExcelJob(...)` / `al.CsvJob(...)` as a keyword argument to change it.
 - New flow: copy a notebook, change its variables cell, add one `CALL :RUN_FLOW "<notebook>" "<LABEL>"` line in `00_master_flow.bat`. To pause a flow (e.g. the Tet one outside the Tet window) put `@REM` in front of its line.
 - After editing `auto_lib`, restart the kernel (a running kernel keeps the version it imported first).
+- Notebook 04 keeps its `csv` folder in sync by itself - never empty it by hand: every run replaces each CSV, then deletes CSVs whose workbook is gone (`remove_stale=False` = only warn). `skip_unchanged=True` converts only the workbooks that changed since the last run; it remembers them in `csv\_convert_state.json` - delete that file (or any CSV) to force a rebuild.
 
 ## Machine-specific settings (change when the repo moves to another PC or user)
 
