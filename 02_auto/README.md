@@ -27,10 +27,11 @@ Thin notebooks that only hold the configuration (SQL, paths, sheet names); the w
 ## Change something
 
 - SQL, sheet name, workbook path, header aliases: the "Declaration of variables" cell of that notebook.
-- Tuning knobs (retries, waits, timeouts, chunk size, strict header check, ...): listed in the same cell with their defaults; pass one to `al.ExcelJob(...)` / `al.CsvJob(...)` as a keyword argument to change it.
+- Tuning knobs (retries, waits, timeouts, chunk size, strict header check, ...): the fields of `ExcelJob` in `auto_lib/excel.py` and `CsvJob` in `auto_lib/xlsx_csv.py`, with their defaults; pass one to `al.ExcelJob(...)` / `al.CsvJob(...)` as a keyword argument to change it.
 - New flow: copy a notebook, change its variables cell, add one `CALL :RUN_FLOW "<notebook>" "<LABEL>"` line in `00_master_flow.bat`. To pause a flow (e.g. the Tet one outside the Tet window) put `@REM` in front of its line.
 - After editing `auto_lib`, restart the kernel (a running kernel keeps the version it imported first).
 - Notebook 04 keeps its `csv` folder in sync by itself - never empty it by hand: every run replaces each CSV, then deletes CSVs whose workbook is gone (`remove_stale=False` = only warn). `skip_unchanged=True` converts only the workbooks that changed since the last run; it remembers them in `csv\_convert_state.json` - delete that file (or any CSV) to force a rebuild.
+- Notebook 04 sets `date_cols=("ORDER_DATE",)`: only those columns hold dates. A number that Excel merely shows as a date because the cell has a date format (e.g. VOUCHER_ID 992 shown as 1902-09-18) is written as the number, and the log says how many.
 
 ## Machine-specific settings (change when the repo moves to another PC or user)
 

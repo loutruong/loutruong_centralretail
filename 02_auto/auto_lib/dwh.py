@@ -1,5 +1,3 @@
-"""Oracle DWH -> pandas DataFrame (notebooks 01 - 03): .env settings, Thick-mode client, query.
-oracledb and dotenv are imported inside the functions that need them, so this also works without them."""
 import os
 from time import perf_counter
 
@@ -11,8 +9,6 @@ REQUIRED_ENV = ("DWH_HOST", "DWH_PORT", "DWH_NAME", "DWH_USER", "DWH_PASSWORD")
 
 
 def load_env() -> dict:
-    """Loads the .env file and returns the five DWH_* settings; fails fast, without printing the
-    password, when any of them is missing or empty."""
     try:
         from dotenv import load_dotenv
     except ImportError:
@@ -28,7 +24,6 @@ def load_env() -> dict:
 
 
 def init_oracle_client_once(lib_dir: str) -> None:
-    """Loads the Oracle Instant Client (Thick mode) once per kernel, so the Config cell is safe to re-run."""
     import oracledb
 
     if hasattr(oracledb, "is_thin_mode") and not oracledb.is_thin_mode():
@@ -43,9 +38,6 @@ def init_oracle_client_once(lib_dir: str) -> None:
 
 def fetch_dataframe(sql: str, *, arraysize: int = 10000, allow_empty: bool = False,
                     env: dict | None = None) -> pd.DataFrame:
-    """Runs the query and returns a DataFrame, always closing the connection/cursor. An empty result is
-    refused (unless allow_empty) so an unfinished DWH load can never wipe the sheet. Any error is logged
-    as the SCRIPT_RESULT: FAILED line and re-raised."""
     started = perf_counter()
     try:
         import oracledb
@@ -55,7 +47,7 @@ def fetch_dataframe(sql: str, *, arraysize: int = 10000, allow_empty: bool = Fal
         with oracledb.connect(user=env["DWH_USER"], password=env["DWH_PASSWORD"], host=env["DWH_HOST"],
                               port=int(env["DWH_PORT"]), service_name=env["DWH_NAME"]) as connection:
             with connection.cursor() as cursor:
-                cursor.arraysize = arraysize          # fewer round trips for big result sets
+                cursor.arraysize = arraysize
                 cursor.prefetchrows = arraysize + 1
                 cursor.execute(sql)
                 columns = [col[0] for col in cursor.description]

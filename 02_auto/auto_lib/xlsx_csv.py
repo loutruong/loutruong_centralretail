@@ -1,7 +1,3 @@
-"""Monthly .xlsx -> UTF-8 CSV + BigQuery schema.json (notebook 04): Read > Standardize > Write > Schema >
-Clean. Every cell is read as text and every schema column is STRING, so BigQuery always gets a safe landing
-zone. After a successful run the output folder mirrors the workbooks - one CSV per monthly workbook, nothing
-left over - so it never has to be emptied by hand."""
 import hashlib
 import json
 import os
@@ -16,17 +12,13 @@ import pandas as pd
 
 from .log import log
 
-# Vietnamese Đ/đ is a letter of its own, not D plus an accent, so stripping accents would drop it: it is
-# mapped by hand (Ð/ð are the look-alike letters some exports use instead)
 D_STROKE = str.maketrans({"Đ": "D", "đ": "d", "Ð": "D", "ð": "d"})
-SWAP_ATTEMPTS = 5       # tries to swap a finished file in while OneDrive / antivirus still holds the old one
-SWAP_WAIT = 1.0         # seconds between those tries
+SWAP_ATTEMPTS = 5
+SWAP_WAIT = 1.0
+DATE_TEXT = r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?"
 
 
 def hide_broken_zstandard():
-    """pandas probes the optional `zstandard` lib on every to_csv(); the Anaconda copy imports but has no
-    __version__, so probing raises ImportError. We never write .zst, so hide it here (called before every
-    CSV write) and pandas behaves as if it were not installed."""
     try:
         import zstandard as _zstd
         if not getattr(_zstd, "__version__", None):
@@ -37,34 +29,28 @@ def hide_broken_zstandard():
 
 @dataclass
 class CsvJob:
-    """Which folder to convert and how; src_path is required, every other field is a tuning knob, e.g.
-    CsvJob(src_path=src_path, skip_unchanged=True)."""
-
     src_path: str
-    out_folder: str = "csv"                  # output sub folder, created if missing
-    file_pattern: str = "*.xlsx"             # only monthly raw files
-    month_pattern: str = r"\d{4}[-_]\d{2}"   # YYYY-MM in the file name, - or _ separator
-    sheet_name: int | str = 0                # first sheet of every workbook
-    month_col: str = "source_month"          # extra column: source file's month
-    csv_encoding: str = "utf-8"              # what BigQuery expects
-    schema_file: str = "schema.json"         # BigQuery schema (all STRING)
-    skip_unchanged: bool = False             # True = convert only workbooks that changed since the last run
-    remove_stale: bool = True                # True = delete CSVs whose workbook is gone; False = only warn
-    state_file: str = "_convert_state.json"  # skip_unchanged only: what every CSV was built from
+    out_folder: str = "csv"
+    file_pattern: str = "*.xlsx"
+    month_pattern: str = r"\d{4}[-_]\d{2}"
+    sheet_name: int | str = 0
+    month_col: str = "source_month"
+    csv_encoding: str = "utf-8"
+    schema_file: str = "schema.json"
+    skip_unchanged: bool = False
+    remove_stale: bool = True
+    state_file: str = "_convert_state.json"
+    date_cols: tuple | None = None
 
 
-# --- Helper functions ---
 def bq_name(col):
-    """Converts a raw header (e.g., 'Mã Voucher') into a clean, SQL-friendly name (e.g., 'ma_voucher')."""
     s = unicodedata.normalize("NFKD", str(col).strip().translate(D_STROKE))
-    s = s.encode("ascii", "ignore").decode("ascii")   # drop VN accents
+    s = s.encode("ascii", "ignore").decode("ascii")
     s = re.sub(r"[^0-9A-Za-z_]+", "_", s).strip("_").lower()
     return s if s and not s[0].isdigit() else "col_" + s
 
 
 def schema_names(columns):
-    """BigQuery names for the template columns, de-duplicated with _1, _2, ... suffixes that are never
-    handed out twice."""
     names, used = [], set()
     for c in columns:
         base = name = bq_name(c)
@@ -78,18 +64,15 @@ def schema_names(columns):
 
 
 def file_month(xlsx, month_pattern=CsvJob.month_pattern):
-    """Returns 'YYYY-MM' from the file name (e.g., '2025-04' from '2025_04-CRV_Raw'), or None if not found."""
     m = re.search(month_pattern, Path(xlsx).stem)
     return m.group().replace("_", "-") if m else None
 
 
 def list_workbooks(src, file_pattern=CsvJob.file_pattern):
-    """The workbooks to convert, in name order, without Excel's '~$' lock files."""
     return [f for f in sorted(Path(src).glob(file_pattern)) if not f.name.startswith("~$")]
 
 
 def read_workbook(xlsx, sheet_name=CsvJob.sheet_name):
-    """Reads the first sheet as text (no type guessing) and warns about blank headers."""
     df = pd.read_excel(xlsx, sheet_name=sheet_name, dtype=str).fillna("")
     unnamed = [c for c in df.columns if str(c).startswith("Unnamed:")]
     if unnamed:
@@ -97,19 +80,44 @@ def read_workbook(xlsx, sheet_name=CsvJob.sheet_name):
     return df
 
 
+def date_columns(job):
+    if job.date_cols is None:
+        return None
+    return (job.date_cols,) if isinstance(job.date_cols, str) else tuple(job.date_cols)
+
+
+def undo_date_formats(df, date_cols, name):
+    from datetime import datetime
+    from openpyxl.utils.datetime import to_excel
+
+    for col in df.columns:
+        if col in date_cols:
+            continue
+        looks_like_date = df[col].str.fullmatch(DATE_TEXT)
+        if not looks_like_date.any():
+            continue
+        numbers = {}
+        for text in df.loc[looks_like_date, col].unique():
+            number = to_excel(datetime.fromisoformat(text))
+            numbers[text] = str(int(number)) if number == int(number) else repr(number)
+        df.loc[looks_like_date, col] = df.loc[looks_like_date, col].map(numbers)
+        log(f"  !! {name}: {int(looks_like_date.sum()):,} number(s) in '{col}' have a date format in Excel - "
+            f"written as numbers")
+    return df
+
+
 def read_month(xlsx, month, job):
-    """One monthly workbook as text plus its source-month column; a read error names the workbook."""
     try:
         df = read_workbook(xlsx, job.sheet_name)
     except Exception as e:
         raise RuntimeError(f"Could not read '{xlsx.name}': {e}") from e
+    if job.date_cols is not None:
+        df = undo_date_formats(df, date_columns(job), xlsx.name)
     df[job.month_col] = month
     return df
 
 
 def align_to_template(df, template, name):
-    """Re-aligns a workbook's columns to the template: missing ones come back blank, extra ones are
-    dropped, and both are reported."""
     if list(df.columns) == template:
         return df
     extra = [c for c in df.columns if c not in template]
@@ -119,8 +127,6 @@ def align_to_template(df, template, name):
 
 
 def swap_in(tmp_path, final_path):
-    """os.replace with a little patience: OneDrive or an antivirus scan can hold the old file for a moment.
-    A file that stays locked (e.g. open in Excel) still fails the run, with the usual PermissionError."""
     for attempt in range(1, SWAP_ATTEMPTS + 1):
         try:
             os.replace(tmp_path, final_path)
@@ -134,8 +140,6 @@ def swap_in(tmp_path, final_path):
 
 
 def write_csv(df, csv_path, encoding=CsvJob.csv_encoding):
-    """Writes to a temp file first, then swaps it in, so a crash can never leave a half-written CSV behind.
-    The swap replaces a CSV that is already there: a month never needs deleting before it is converted."""
     hide_broken_zstandard()
     tmp_path = csv_path.with_suffix(".csv.tmp")
     df.to_csv(tmp_path, index=False, encoding=encoding, lineterminator="\n")
@@ -143,8 +147,6 @@ def write_csv(df, csv_path, encoding=CsvJob.csv_encoding):
 
 
 def write_schema(template, out, schema_file=CsvJob.schema_file, encoding=CsvJob.csv_encoding):
-    """Builds the BigQuery schema (every column STRING, de-duplicated names) and returns the names; leaves
-    an existing schema.json untouched when no workbook was read this run."""
     if template is None:
         log("No workbook was read this run. Existing schema.json (if any) is left untouched.")
         return []
@@ -156,8 +158,6 @@ def write_schema(template, out, schema_file=CsvJob.schema_file, encoding=CsvJob.
 
 
 def delete_files(paths):
-    """Deletes the files it can and returns their names; one that is locked (open in Excel, still syncing) is
-    reported and left for the next run."""
     deleted = []
     for path in paths:
         try:
@@ -170,11 +170,6 @@ def delete_files(paths):
 
 
 def sweep_output_folder(out, xlsx_files, month_pattern=CsvJob.month_pattern, remove=CsvJob.remove_stale):
-    """Makes the folder mirror the workbooks: CSVs with no matching workbook (they'd be loaded to BigQuery as
-    duplicates) and temp files an interrupted run left behind are deleted - or, when remove is False, the
-    CSVs are only reported. Nothing else in the folder is touched, and nothing at all when no monthly workbook
-    was found, so an empty or half-synced source folder can never wipe the CSVs. Returns the stale CSV names
-    that are still in the folder."""
     monthly = [f for f in xlsx_files if file_month(f, month_pattern) is not None]
     expected_csv = {f"{f.stem}.csv".casefold() for f in monthly}
     stale = sorted(p for p in out.glob("*.csv") if p.is_file() and p.name.casefold() not in expected_csv)
@@ -199,11 +194,7 @@ def sweep_output_folder(out, xlsx_files, month_pattern=CsvJob.month_pattern, rem
     return [name for name in stale_csv if name not in deleted]
 
 
-# --- skip_unchanged: remembering which workbook version every CSV was built from ---
 def job_signature(job):
-    """Everything besides the workbook that shapes a CSV: the knobs, pandas, the Excel reader and this file
-    itself. CSVs are only kept while it stays the same, so changing a knob, updating Anaconda or editing this
-    module rebuilds every CSV once."""
     try:
         code = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()[:16]
     except OSError:
@@ -213,13 +204,13 @@ def job_signature(job):
         reader = openpyxl.__version__
     except Exception:
         reader = "unknown"
+    date_cols = date_columns(job)
     return {"sheet_name": job.sheet_name, "month_col": job.month_col, "month_pattern": job.month_pattern,
-            "csv_encoding": job.csv_encoding, "pandas": pd.__version__, "openpyxl": reader, "code": code}
+            "csv_encoding": job.csv_encoding, "date_cols": None if date_cols is None else list(date_cols),
+            "pandas": pd.__version__, "openpyxl": reader, "code": code}
 
 
 def load_state(path, signature):
-    """Last run's record, or None when there is none, it cannot be read, or it was written with other
-    settings / another version of this file - then nothing is trusted and every CSV is rebuilt."""
     try:
         state = json.loads(path.read_text(encoding="utf-8"))
         usable = (state["signature"] == signature and isinstance(state["template_source"], str)
@@ -231,14 +222,12 @@ def load_state(path, signature):
 
 
 def save_state(path, state):
-    """Writes the record through a temp file, like the CSVs, so it is never half-written."""
     tmp_path = path.with_suffix(path.suffix + ".tmp")
     tmp_path.write_text(json.dumps(state, indent=2, ensure_ascii=False), encoding="utf-8")
     swap_in(tmp_path, path)
 
 
 def drop_state(path):
-    """Deletes the record: a run that does not keep it up to date would leave it describing replaced CSVs."""
     try:
         path.unlink(missing_ok=True)
     except OSError as e:
@@ -246,7 +235,6 @@ def drop_state(path):
 
 
 def source_unchanged(record, source_stat):
-    """True when the workbook still has exactly the size and modified time it had when its CSV was built."""
     try:
         return record["size"] == source_stat.st_size and record["mtime_ns"] == source_stat.st_mtime_ns
     except (KeyError, TypeError):
@@ -254,7 +242,6 @@ def source_unchanged(record, source_stat):
 
 
 def csv_intact(record, csv_path):
-    """True when the CSV is still in the folder at the size it was written (not deleted, not edited)."""
     try:
         return csv_path.is_file() and record["csv_size"] == csv_path.stat().st_size
     except (KeyError, TypeError, OSError):
@@ -262,9 +249,6 @@ def csv_intact(record, csv_path):
 
 
 def can_keep(state, xlsx, source_stat, csv_path):
-    """True when the record says this CSV was built from exactly this workbook version and is still intact.
-    The date of the CSV is never compared with the date of the workbook: a workbook replaced by an older
-    copy has changed too."""
     try:
         record = state["files"][xlsx.name]
     except (KeyError, TypeError):
@@ -272,13 +256,8 @@ def can_keep(state, xlsx, source_stat, csv_path):
     return source_unchanged(record, source_stat) and csv_intact(record, csv_path)
 
 
-# --- The whole run ---
 def convert_folder(job: CsvJob) -> int:
-    """Converts every monthly workbook of job.src_path into <out_folder>/<name>.csv (replacing the CSV that is
-    already there), writes schema.json, removes what no longer belongs in the folder and returns the rows
-    converted; any error is logged as SCRIPT_RESULT: FAILED and re-raised."""
     try:
-        # --- Folder controller ---
         src = Path(job.src_path)
         if not src.is_dir():
             raise FileNotFoundError(f"Source folder not found: {job.src_path}")
@@ -287,18 +266,16 @@ def convert_folder(job: CsvJob) -> int:
         xlsx_files = list_workbooks(src, job.file_pattern)
         log(f"Found {len(xlsx_files)} workbook(s) in '{src.name}'.")
 
-        # --- Last run's record (skip_unchanged only) ---
         state_path = out / job.state_file
-        track = job.skip_unchanged      # keep the record up to date during this run
+        track = job.skip_unchanged
         if track:
             signature = job_signature(job)
             state = load_state(state_path, signature)
         else:
             signature = state = None
-            drop_state(state_path)      # every CSV is replaced below, so an old record would be wrong
+            drop_state(state_path)
 
-        # --- Convert each workbook ---
-        template = None      # first file's column layout; later files must match it
+        template = None
         total_rows = 0
         converted = []
         kept = []
@@ -312,12 +289,12 @@ def convert_folder(job: CsvJob) -> int:
                 continue
 
             csv_path = out / f"{xlsx.stem}.csv"
-            source_stat = xlsx.stat()    # taken before the read, so a save during the run is caught next time
+            source_stat = xlsx.stat()  # before the read: a save during the run is caught next run
             df = None
 
-            if template is None:         # first workbook: its columns are the template
+            if template is None:
                 if can_keep(state, xlsx, source_stat, csv_path) and state["template_source"] == xlsx.name:
-                    template = state["template"]     # same workbook as last run: no need to read it again
+                    template = state["template"]
                 else:
                     df = read_month(xlsx, month, job)
                     template = list(df.columns)
@@ -332,7 +309,11 @@ def convert_folder(job: CsvJob) -> int:
                         if state is None:
                             state = {"signature": signature, "template": template, "files": {}}
                         state["template_source"] = xlsx.name
-                        save_state(state_path, state)   # before any CSV is replaced: it never overclaims
+                        save_state(state_path, state)  # before any CSV is replaced
+                unknown = [c for c in date_columns(job) or () if c not in template]
+                if unknown:
+                    raise ValueError(f"date_cols names {unknown}, but the workbooks have no such column. "
+                                     f"Their columns: {template}")
 
             if can_keep(state, xlsx, source_stat, csv_path):
                 log(f"  {xlsx.name:28} unchanged, CSV kept")
@@ -344,7 +325,7 @@ def convert_folder(job: CsvJob) -> int:
             df = align_to_template(df, template, xlsx.name)
 
             if state is not None and xlsx.name in state["files"]:
-                del state["files"][xlsx.name]           # its CSV is about to be replaced
+                del state["files"][xlsx.name]
                 save_state(state_path, state)
             write_csv(df, csv_path, job.csv_encoding)
             if state is not None:
@@ -361,17 +342,15 @@ def convert_folder(job: CsvJob) -> int:
         if converted and kept:
             log(f"CSV files written this run: {[Path(name).stem + '.csv' for name in converted]}")
 
-        # --- Schema + clean-up: the folder ends up holding exactly one CSV per monthly workbook ---
         names = write_schema(template, out, job.schema_file, job.csv_encoding)
         sweep_output_folder(out, xlsx_files, job.month_pattern, job.remove_stale)
         if state is not None:
             gone = [name for name in state["files"] if name not in converted and name not in kept]
-            if gone:                     # workbooks that were removed or renamed since the last run
+            if gone:
                 for name in gone:
                     del state["files"][name]
                 save_state(state_path, state)
 
-        # --- Summary ---
         if converted:
             log(f"Done -> {out}")
             log(f"Columns: {', '.join(names)}")
