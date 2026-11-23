@@ -65,16 +65,13 @@ SELECT
     ORD_CNT,
     BYR_CNT,
     MARGIN
-FROM
-    crv_data.loutruong_supplier_perf_di
+FROM crv_data.loutruong_supplier_perf_di
 WHERE
     1 = 1
     AND LOWER(supplier_code) IN ('00_all_omni')
     AND LOWER(dimension) IN ('app')
     AND SALE_DATE >= '30-JAN-2026'
-ORDER BY
-    SALE_DATE ASC
-;
+ORDER BY SALE_DATE ASC;
 
 -- SELECT
 --     AVG(NET_SALES) / 1000000000 AS AVG_NET_SALES,
